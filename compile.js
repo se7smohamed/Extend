@@ -7,6 +7,7 @@ const utils = require('./utils')
 let fileName = './source.js.xs'
 let source = fs.readFileSync(fileName).toString()
 let buildName = fileName.split('.').slice(0, -1).join('.')
+
 const main = () => {
     let whichToLeave = str => {
         let toLeave = []
@@ -59,7 +60,7 @@ const main = () => {
         partText = source.slice( part.s, part.e )
         if( part.toProcess ){
             partText = utils.spaceOutTokens( partText )
-            // console.log('parttttt', partText)
+            // console.log( rules.decideRule(partText) )
             processed += rules.ruleListComper(partText)
         }else{
             

@@ -104,6 +104,9 @@ String.prototype.getIndexes = function(needle){
 //     return rule
 // }
 
+exports.escapeRegExp = escapeRegExp = (string) => (
+    string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+)
 
 exports.cleanOffRule = (rule) => {
 
