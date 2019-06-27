@@ -1,44 +1,32 @@
 const c = require('./config')
-newLine = '__newLineToken__'
 // console.log('tokens tokens tokens ', tokens)
 // console.log( c )
+
+Array.prototype.includesAll = function(arr){
+    if(!Array.isArray(arr)){ arr = [arr] }
+    let all = true
+    let go = true
+    arr.forEach( el => {
+        if ( !(go && this.valueOf().includes(el) )) {
+            go = false; all = false
+        }
+    })
+    return all
+}
+
 String.prototype.replaceAll = function(needle, replace){
     return this.valueOf().split(needle).join(replace)
 }
 exports.extractVarRegEx = extractVarRegEx = new RegExp( `${c.varStartE}\\S+${c.varEndE}`,'g' )
-// String.prototype.replaceIndex = function(i, value) {
-//     let string = this.valueOf()
-//     if(i===0){return string}
-//     // log('11', strParts, 11)
-//     strParts = [ string.slice(0, i-1), string.slice(i) ]
-//     // log('11', strParts, 11)
-//     // console.log(i, value)
-//     string = strParts[0] + strParts[1].split('').unshift(value)
-//     return string
-// }
+// String.prototype.replaceIndex = function(i, value) { //     let string = this.valueOf() //     if(i===0){return string} //     // log('11', strParts, 11) //     strParts = [ string.slice(0, i-1), string.slice(i) ] //     // log('11', strParts, 11) //     // console.log(i, value) //     string = strParts[0] + strParts[1].split('').unshift(value) //     return string // }
+
 exports.spaceOutTokens = spaceOutTokens = function(string, needles=c.tokens, skipIndexes=[]){
-    // filter function to execlude specific strings
     needles.forEach( (needle, i) => {
         if( skipIndexes.includes(i) ){
-            // console.log('[spaceOut] skipping', needle, i)
             return needle
         }
         string = string.replaceAll(needle, ' ' + needle + ' ')
     })
-    // console.log(string)
-    // string.split('').forEach( (char, i) => {
-    //     if( skipIndexes.includes(i) ){
-    //         // console.log('[spaceOut] skipping', char, i)
-    //         return char
-    //     }
-    //     else if( needles.includes(char) ){
-    //         // console.log('[spaceOut] spacing ', char)
-    //         string = string.replaceIndex(i, ' ' + char + ' ')
-    //         // console.log('[after replaceindex]', string)
-    //         // string = string.replaceAll(char, ' ' + char + ' ')
-    //     }
-    // })
-    // console.log('now string is ', string)
     return string
 } // console.log(spaceOutTokens('asda [][a[}', tokens, ' '))
 
@@ -46,6 +34,7 @@ String.prototype.handleExtraSpaces = function(){
     let str = this.valueOf()
     return str.replace(/[^\S\r\n]+/g, ' ')
 }
+
 // todo
 String.prototype.unspace = unspace = function(skipIndexes=[]) {
     let str = this.valueOf() 
@@ -57,27 +46,15 @@ String.prototype.unspace = unspace = function(skipIndexes=[]) {
     let forbidRegex = new RegExp(`${c.varStartE}\\S+${c.varEndE}`, 'g')
     let forbiddenIndexes = []
     while ((match = forbidRegex.exec(str)) != null) {
-        // console.log('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx', [
-        //     c.varStart.length + match.index,
-        //     c.varEnd.length + match.index + match[0].length,
-        // ])
-        // console.log(match)
         for(let i=0; i<c.varStart.length; i++){
             let foundIndex = match.index + i
-            // console.log( 'blocking letter ', str[foundIndex] )
             forbiddenIndexes.push( foundIndex )
         }
         for(let i=0; i<c.varEnd.length; i++){
             let foundIndex = match.index + match[0].length - c.varStart.length + i
-            // console.log( 'blocking letter ', str[foundIndex] )
             forbiddenIndexes.push( foundIndex )
         }
-
-        // forbiddenIndexes.push( c.varEnd.length + match.index + match[0].length )
-        // console.log('forbiddenIndexes', forbiddenIndexes)
-    }    
-    // console.log('[forbiddenIndexes]', forbiddenIndexes)
-
+    }
     str = spaceOutTokens(str, c.tokens ,forbiddenIndexes)
     str = str.replace(/[^\S\r\n]+/g, ' ').trim()
     return str
@@ -108,9 +85,7 @@ exports.escapeRegExp = escapeRegExp = (string) => (
     string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 )
 
-exports.cleanOffRule = (rule) => {
-
-}
+exports.cleanOffRule = (rule) => {}
 let p = 10
 exports.log = log = ( ...args ) => {
     let place = args[0]
