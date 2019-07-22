@@ -19,7 +19,8 @@ module.exports = c = {
 }
 
 
-module.exports.tokens = tokens = '[]{}|!^&*()-+=\\/&%,;'.split('').concat(c.varStart)
+module.exports.tokens = tokens = '[]{}|!^&*()-+=\\/&%,;\'"'.split('').concat(c.varStart)
+module.exports.leaveTokens = leaveTokens = '=>'.split(' ').concat(c.varStart)
 
 
 // let escapeForRegEx = 1;

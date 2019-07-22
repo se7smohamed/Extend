@@ -1,6 +1,5 @@
 const c = require('./config')
-// console.log('tokens tokens tokens ', tokens)
-// console.log( c )
+let badCombinations = ['=>', '||', '>>', '<<', '++', '--', '+=', '-=', '*=', '/=', '%=', '==', '===', '!=', '!==',  ]
 
 Array.prototype.includesAll = function(arr){
     if(!Array.isArray(arr)){ arr = [arr] }
@@ -14,21 +13,47 @@ Array.prototype.includesAll = function(arr){
     return all
 }
 
+Array.prototype.flat = function(){
+    return this.valueOf().reduce((acc, val) => Array.isArray(val) ? acc.concat(flattenDeep(val)) : acc.concat(val), []);
+}
+
 String.prototype.replaceAll = function(needle, replace){
     return this.valueOf().split(needle).join(replace)
 }
-exports.extractVarRegEx = extractVarRegEx = new RegExp( `${c.varStartE}\\S+${c.varEndE}`,'g' )
-// String.prototype.replaceIndex = function(i, value) { //     let string = this.valueOf() //     if(i===0){return string} //     // log('11', strParts, 11) //     strParts = [ string.slice(0, i-1), string.slice(i) ] //     // log('11', strParts, 11) //     // console.log(i, value) //     string = strParts[0] + strParts[1].split('').unshift(value) //     return string // }
+String.prototype.splitMultiple = function(delimiters){
+    let str = this.valueOf()
+    strArray = str.split(delimiters[0]).flat()
 
+    strArray.forEach( (strPart, i) => {
+        delimiters.forEach( delimiter => {
+            console.log(strArray)
+            strArray[i] = strArray[i].split(delimiter)
+        })
+        strArray[i] = strArray[i].flat()
+        // let tmp = strPart
+        // return strPart.replace
+    })
+    // delimiters
+    //     .slice(1)
+    //     .forEach( delimiter => str.split(delimiter) )
+}
+
+String.prototype.splitKeep = function(delimiter){
+    let regex = new RegExp(`(?=${delimiter})`, 'g')
+    return this.split(regex)
+}
+
+exports.extractVarRegEx = extractVarRegEx = new RegExp( `${c.varStartE}\\S+${c.varEndE}`,'g' )
 exports.spaceOutTokens = spaceOutTokens = function(string, needles=c.tokens, skipIndexes=[]){
     needles.forEach( (needle, i) => {
         if( skipIndexes.includes(i) ){
             return needle
         }
+        // if( string.slice() )
         string = string.replaceAll(needle, ' ' + needle + ' ')
     })
     return string
-} // console.log(spaceOutTokens('asda [][a[}', tokens, ' '))
+}
 
 String.prototype.handleExtraSpaces = function(){
     let str = this.valueOf()
@@ -36,15 +61,19 @@ String.prototype.handleExtraSpaces = function(){
 }
 
 // todo
+// fix or remove this method later
 String.prototype.unspace = unspace = function(skipIndexes=[]) {
     let str = this.valueOf() 
 
     // space around every token so I dont have to worry about white space
     let tmpTokens = c.tokens.join('')
-    // skipIndexes.map( el => tmpTokens = tmpTokens.replace(el, '') )
     tmpTokens = tmpTokens.split('')
     let forbidRegex = new RegExp(`${c.varStartE}\\S+${c.varEndE}`, 'g')
+    
     let forbiddenIndexes = []
+
+    // a terrible way to leave braces for vars
+    // prob not needed any more
     while ((match = forbidRegex.exec(str)) != null) {
         for(let i=0; i<c.varStart.length; i++){
             let foundIndex = match.index + i
@@ -56,7 +85,12 @@ String.prototype.unspace = unspace = function(skipIndexes=[]) {
         }
     }
     str = spaceOutTokens(str, c.tokens ,forbiddenIndexes)
-    str = str.replace(/[^\S\r\n]+/g, ' ').trim()
+    str = str.replace(/[^\S\r\n]+/g, ' ')
+
+    // trim string while leaving new lines.. (it caused a bug)
+    while(str[0]===' '){str=str.slice(1)}
+    while(str[str.length-1]===' '){str=str.slice(0,-1)}
+
     return str
 }
 
@@ -70,17 +104,6 @@ String.prototype.getIndexes = function(needle){
     })
     return tmp
 }
-// exports.getIndexesToSkip = getIndexesToSkip = (rule, skips=[]) => {
-//     let vars = []
-//     let regex = new RegExp(`${ c.varStartE }[\\S\\s]*${ c.varEndE }`, 'g')
-//     skips.forEach( skip => {
-//         while ((match = re.exec(str)) != null) {
-//             console.log('[][[]]', match)
-//         }        
-//     })
-//     return rule
-// }
-
 exports.escapeRegExp = escapeRegExp = (string) => (
     string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 )
@@ -95,14 +118,3 @@ exports.log = log = ( ...args ) => {
         console.log( `[${place}]`, ...msgs)
     }
 }
-
-// console.log(unspace('  asd asd asd asd           e.rgj.wbajef       '))
-// console.log(rep('  asd asd asd asd        e.rgj.wbajef       '))
-// console.log(unspace(word))
-
-
-// exports.For = For = (num=0, callback=x=>x) => {
-//     for(let i=0; i<c.varStart.length; i++){
-//         callback(i)
-//     }
-// }

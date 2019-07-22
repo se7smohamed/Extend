@@ -27,9 +27,15 @@ let varParser = ({
     // switch (varArray) { //     case 1: // case 2: // case 3: //     return { //         value: variable, //         required: false //     } // }
 }
 
-let forDotsFunction = obj => `for(let i=0; i<){
+let forDotsFunction = obj => {
+    let sign = '++'
+    if(obj.vars.start > obj.vars.end){
+        sign = '--'
+    }
+return `for(let i=${obj.vars.start}; i < ${obj.vars.end}; i${sign}){
     ${obj.vars.code}
 }`
+}
 
 let pyListFunc = obj => {
     // let run = true
@@ -49,9 +55,18 @@ rules = {
         template: `[{{varSpec}} for {{var}} in {{array}}]`,
         function: pyListFunc, 
     },
-    varParser: {
-        function: varParser
-    }
+    // comment: {
+    //     template: '//{{comment}}\n',
+    //     function: s=>''
+    // }
+    // wrong: {
+    //     template: '{{x}}-{{x}}',
+    //     function: a=>a
+    // },
+    // varParser: {
+    //     template: '',
+    //     function: varParser
+    // }
 }
 
 module.exports = rules
