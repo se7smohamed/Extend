@@ -9,10 +9,10 @@ let buildName = fileName.split('.').slice(0, -1).join('.')
 
 let main = (parts) => {
     let processed = ''
+    console.log(parts)
     parts.forEach( (part, i) => {
         processed += rules.recursiveLookForRule(part)
     })
-    // let processed = rules.recursiveLookForRule(string)
     console.log(processed)
     writeToFile(processed)
     return processed

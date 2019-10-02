@@ -55,8 +55,7 @@ exports.spaceOutTokens = spaceOutTokens = function(string, needles=c.tokens, ski
     return string
 }
 
-String.prototype.handleExtraSpaces = function(){
-    let str = this.valueOf()
+String.prototype.removeExtraSpace = function(){
     return str.replace(/[^\S\r\n]+/g, ' ')
 }
 
@@ -72,6 +71,7 @@ String.prototype.unspace = unspace = function(skipIndexes=[]) {
     
     let forbiddenIndexes = []
 
+    // todo
     // a terrible way to leave braces for vars
     // prob not needed any more
     while ((match = forbidRegex.exec(str)) != null) {
@@ -94,7 +94,7 @@ String.prototype.unspace = unspace = function(skipIndexes=[]) {
     return str
 }
 
-String.prototype.getIndexes = function(needle){
+String.prototype.UNUSED_getIndexes = function(needle){
     let str = this.valueOf(),
     tmp = []
     str.split('').forEach( (el, i) => {
@@ -104,17 +104,7 @@ String.prototype.getIndexes = function(needle){
     })
     return tmp
 }
-exports.escapeRegExp = escapeRegExp = (string) => (
+
+exports.UNUSED_escapeRegExp = escapeRegExp = (string) => (
     string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 )
-
-exports.cleanOffRule = (rule) => {}
-let p = 10
-exports.log = log = ( ...args ) => {
-    let place = args[0]
-    let priority = args.slice(-1)
-    let msgs = args.slice(1, -1)
-    if ( priority >= p ){
-        console.log( `[${place}]`, ...msgs)
-    }
-}

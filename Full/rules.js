@@ -65,7 +65,7 @@ let parseAllRules = () => (
 )
 
 exports.applyRule = applyRule = (found, rule, callback=()=>{}, pre=a=>a ) => {
-    console.log('coming for', found, rule.template)
+    // console.log('coming for', found, rule)
     found = pre(found)
     found = found.unspace()
     foundArr = found.split(' ')
@@ -126,12 +126,15 @@ exports.applyRule = applyRule = (found, rule, callback=()=>{}, pre=a=>a ) => {
             run = 0
         }
     })
+    
     if (!run){
         return false
     }
+
     obj = { vars: varObj }
     let result = callback( obj )
     if( typeof result === 'string' ){
+        console.log(result)
         return result + '\n\n'
     } 
     return result
@@ -167,121 +170,87 @@ lookForRuleSettings = {}
 let userRulesArray = Object.keys(userRules).map( key => userRules[key])
 
 exports.recursiveLookForRule = recursiveLookForRule = string => {
-    ///////
-    // let strArrayChanged = string.unspace().split(' ')
-    let strArrayChanged = string.unspace().splitKeep(' ')
+    let strArray2 = string.splitKeep(' ')
     let processed = ''
-    // console.log(strArrayChanged)
-    while(strArrayChanged.length){
+    console.log(strArray2)
+    while(strArray2.length){
         let i = 0
-        let wordFull = strArrayChanged[i]
+        let wordFull = strArray2[i]
         let word = wordFull.trim()
-        let foundResult = lookForRule(strArrayChanged, word, i)
+        let foundResult = lookForRule(strArray2, word, i)
+        // console.log('foundResult', foundResult)
         if(foundResult.succ){
-            let foundString = strArrayChanged.slice(foundResult.startingIndex, foundResult.endingIndex).join(' ')
-            let applied = applyRule(foundString, foundResult.rule, foundResult.rule.function)
+            console.log('here')
+            // let foundString = strArrayChanged.slice(foundResult.startingIndex, foundResult.endingIndex).join(' ')
+            // let foundString = strArrayChanged.slice(foundResult.startingIndex, foundResult.endingIndex).join('')
+            let applied = foundResult.applied //applyRule(foundString, foundResult.rule, foundResult.rule.function)
             if(applied){
                 console.log('recursive', string.slice(0,28), '...')
-                processed += applied
-                strArrayChanged = strArrayChanged.slice(0, foundResult.startingIndex).concat( strArrayChanged.slice(foundResult.endingIndex) )
+                processed += ' ' + applied
+                strArray2 = strArray2.slice(foundResult.start, foundResult.end).concat( strArray2.slice(foundResult.endingIndex) )
                 return processed
+            }else{
+                // console.log('sssssssss')
             }
         }
-
-        // todo
-        // rewrite this garbage
-        // let symbols = ["'", '"', '`']
-        // let open = false
-        // if( symbols.includes(word) && !open) {
-        //     open = true
-        //     let foundSymbol = word
-        //     let fullString = word
-        //     let original = i
-        //     while( true ){
-        //         if(word === foundSymbol){
-        //             // found closing char
-        //             // we are done
-        //             if (original === i-1){continue}
-        //             open = false;
-        //             break 
-        //         }else{
-        //             // in the string
-        //             // word = next word (increment i) || break
-        //             wordFull = strArrayChanged[i+1]
-        //             word = wordFull.trim()
-        //             if(word === undefined){ break }
-        //             // original = old then it's opening quote so no space
-        //             // add first just for testing
-        //             if (original === i-1){
-        //                 fullString += '#01!!' + wordFull
-        //             }
-        //             else{ fullString += '(' + wordFull }
-        //         }
-        //     }
-        //     processed += fullString + ' '
-        // }else{
-        //     processed += wordFull
-        // }
         processed += wordFull
-        strArrayChanged = strArrayChanged.slice(1)
+        strArray2 = strArray2.slice(1)
     }
     return processed
 }
 
-exports.lookForRule2 = lookForRule2 = ( strArray, sentWord, sentIndex ) => {
-
-}
 exports.lookForRule = lookForRule = ( strArray, sentWord, sentIndex ) => {
-// console.log(strArray.join('-'))
-    let matchingRules = userRulesArray.filter( (rule, i) => {
+    
+    let firstWordMatch = userRulesArray.filter( (rule, i) => {
+        // console.log(`zzzzzzz "${rule.keywords[0].str}" "${sentWord}"`)
         if( !rule.keywords ) { return false }
         return rule.keywords[0].str === sentWord
     })
-    
-    // each of the found rules tested word by word retruning an array of fully matched arrays (mainly used keywords here)
 
-    // if(matchingRules.length){
-    // console.log(matchingRules)
-    // }
-    let fullyMatchedRules = matchingRules.map( (currRule, j) => {
-        // console.log('mmmmmmmmm', matchingRules)
-        
-        currentMatching = []
-        fullyMatchedTmp = false
-
-        return currRule.keywords.map( (currKeyword, k) => {
-            let lastKwI = sentIndex;
-            
-            while( lastKwI < strArray.length ){
-                if ( strArray[lastKwI] === currKeyword.str ){
-                    // console.log('here')
-                    // let isNested = recursiveLookForRule(strArray.slice(1).join(' '), strArray[lastKwI+1], lastKwI+1)
-
-                    // if( isNested.succ ){
-                    //     console.log('is indeed', sentWord, applyRule( strArray[lastKwI+1], isNested.rule, isNested.rule.function ))
-                    // }
-                    // console.log('matched: ', currKeyword.str, strArray[lastkeywordIndex], lastkeywordIndex)
-                    currentMatching.push( currKeyword.str )
-                    break
+    if(firstWordMatch.length){
+        console.log('...........', firstWordMatch)
+    }
+    let lastI = false
+    let matchedRules = firstWordMatch.map( (rule) => {
+        var keywords = rule.keywords
+        let tmpMatchedRules = []
+        let tmpRule = keywords.map( (kw, i) => {
+            while( i < strArray.length ){
+                if( strArray[i].trim() === kw.str ){
+                    lastI = i
+                    return kw 
                 }
-                lastKwI += 1
+                i++;
+                lastI = i
             }
-            if ( currentMatching.length === currRule.keywords.length ) {
-                return fullyMatchedTmp = {
-                    rule: currRule,
-                    startingIndex: sentIndex,
-                    endingIndex: lastKwI + 1
-                }
-            }else{
-                // console.log(currentMatching, currRule.keywords)
-            }
-        }).filter( el => el !== undefined )[0]
+        }).filter( e => e )
+        if(tmpRule.length === rule.keywords.length ){
+            tmpMatchedRules.push(rule)
+        }else{
+            console.log('str', tmpRule.map(w=>w.str), rule.keywords.map(w=>w.str))
+        }
+        return tmpMatchedRules
     })
 
-    // if(keyword.includes('.')){
-    if ( fullyMatchedRules[0] ){
-        return {succ: 1, ...fullyMatchedRules[0]}
+    if(matchedRules.length > 1){
+        console.log(`Warning: ${matchedRules.length} rules matched. using the last declared rule`)
+    }else if(matchedRules.length === 0 ){
+        // console.log('zzzzzzz', firstWordMatch)
+        return {succ: 0}
     }
-    // console.log(fullyMatchedRules)
-    return {succ: 0}
+    matchedRule = matchedRules[0][matchedRules.length-1]
+    if(!matchedRule){
+        console.log('rrrrrrrrrrr', matchedRules)
+        return {succ: 0}
+    }
+    
+    console.log('aaaaaaaaaaaa', firstWordMatch)
+
+    let applied = applyRule(strArray.join(''), matchedRule, matchedRule.function)
+    return {
+        succ: 1,
+        start: sentIndex,
+        end: lastI,
+        applied
+    }
 }
