@@ -87,15 +87,12 @@ let parseAllRules = () => (
 )
 
 exports.applyRule = applyRule = (foundArr, rule, callback=()=>{}, pre=a=>a ) => {
-    // found = pre(found)
-    // found = found.unspace()
-    // foundArr = found.split(' ')
-    // console.log(`coming for "${found}"`)
-    // console.log(foundArr, rule.keywords.map( k => k.str ))
+    // insert a useful comment here
     rule.keywords.forEach( keywordObj => {
         let keyword = keywordObj.str
         if( !foundArr.includes(keyword) ){
             foundArr.forEach( (found, i) => {
+                // if a word in found array contains keyword 
                 let kwIndex = found.indexOf(keyword)
                 if( kwIndex !== -1 ){
                     let newFoundArr = [found.slice( 0, kwIndex ), keyword, found.slice( kwIndex+keyword.length )]

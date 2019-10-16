@@ -1,24 +1,13 @@
-// the compiler
+const util = require('util')
+const c = require('./config')
 const fs = require('fs')
-const userRules = require('./userRules')
+const rules = require('./rules')
+const utils = require('./utils')
 const parse = require('./parse')
-
 let fileName = './source.js.xs'
-// let source = fs.readFileSync(fileName).toString()
+let source = fs.readFileSync(fileName).toString()
 let buildName = fileName.split('.').slice(0, -1).join('.')
 
-
-
-
-
-
-
-
-
-
-
-
-/* copied */
 let allIndexes = (match, str) => {
     let result, indexes = [];
     let left = 0
@@ -118,6 +107,48 @@ function writeToFile(processed) {
     });
 }
 
-// main( breakExps( source ) )
+main( breakExps( source ) )
 let s = '/*{s}*/'
 let word = 'word'
+
+// console.log(
+    // util.inspect( 
+// breakExps(`let c = /*{  CodeOp{(
+//     /*{  CodeOpN1{(
+//         /*{  CodeOpN2{(
+//             /*{  CodeOpN3{(
+//                 {{}}
+//             )} }*/
+//         )} }*/
+//     )} }*/
+// )} }*/`)
+    // ), {showHidden: false, depth: null})
+// )
+
+// console.log( )
+
+
+
+// let re = new RegExp(`(${t[0]}(.+)${t[1]})+`, 'g')
+
+// while ((match = re.exec(str)) != null) {
+//     console.log(match)
+// }
+
+// // console.log( re.exec(str) )
+
+
+
+// let startsWith = (match, str) => {
+//     let allMatched = true
+//     for(let i = 0; i < match.length; i++){
+//         for(let j = i; j < match.length; j++){
+//             if(str[i] === match[j]){
+//                 allMatched = true
+//                 break
+//             }
+//             allMatched = false
+//         }
+//     }
+//     return allMatched
+// }

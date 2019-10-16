@@ -1,120 +1,116 @@
-let rules = require('./rules')
-// i'll just leave this here.
-let allChars = '\'"\\/.,`!@#$%^&*+-;:?><=[]{}()'.split('')
-let escapeChar = '\\'
-let symbolStack = []
-let symbols = '[],{},()'.split(',')
-let stringChars = '\',",`'.split(',')
-let enders = [';', '\n', '\r']
-let opens = symbols.map(el=>el[0])
-let closes = symbols.map(el=>el[1])
-let symbolNest = []
-// console.log(opens)
+// Basic attempt using mustache syntax
+// todo fix is string or seperate things
 
-let skippedStrings = []
-let skipStrings = (string) => {
-    return
-}
-let isBalanced = (str)=>{}
+let terminals = ['{{', '}}']
+let quotes = ['"', "'", '`']
 
-let myArray = [[]]
-let i = 0
-let skipNext = false
-
-let lookForWord = (strArray, word) => {
-    let i = 0
-    let matched = true
-    word.split('').forEach( (char, j) => {
-        if( strArray[i] === char ) {
-            i++;
-        }else{
-            matched = false
+const extractCode = (str, execluding, isString=1) => {
+    const matchAny = (str, needles) => {
+        for(let i = 0; i < needles.length; i++){
+            if(str.slice(0, needles[i].length)===(needles[i])){
+                return {
+                    match: true,
+                    length: needles[i].length,
+                }
+            }
         }
-    })
-    return matched
-    // console.log(scanForWord('aaa aa aaaa aa', 'aaa aa'))
-}
+        return {match: false}
+    }
 
-let lookForWords = (string, wordArray) => {
-    let found = false
-    return wordArray.some( (word, i) => lookForWord(string, word) )
-}
+    const stringFunc = () => {
+        var list = [{str:''}]
+        var stringDepth = 0
+        var skipI = []
 
-// console.log( lookForWords('aaaaaaa', ['a','b']) )
-// todo leave strings as is?
-exports.breakExps2 = breakExps2 = (string) => {
-    let caried = ''
-    let tmpArray = []
-    currWord = myArray[i]
-    let rest = ''
-    // console.log(string)
-    string.split('').forEach( (char, i) => {
-        if( char === escapeChar ) {
-            return skipNext = true
-        }
-        if(skipNext){
-            rest += ' ' + char + ' '
-            return skipNext = false
-        }
-        if(stringChars.includes(char)) {
-            
-            if(symbolStack.slice(-1)[0] === (char) ) {
-                rest += char
-                symbolStack.pop()
+        for(let i=0; i<str.length; i++){
+
+            if(skipI.includes(i) ){ continue }
+
+            if(str.slice(i, i + execluding[0].length)===execluding[0]){
+                stringDepth++
+                str = str.slice(execluding[0].length-1)
+                list.push({str: '', level:stringDepth})
+                for(let i=0;i<execluding[0].length;i++){skipI.push(i)}
+
+            }else if(str.slice(i, i + execluding[1].length)===execluding[1]){
+                stringDepth--
+                str = str.slice(execluding[1].length-1)
+                list.push({str: '', level:stringDepth})
+                for(let i=0;i<execluding[1].length;i++){skipI.push(i)}
+
             }else{
-                rest += char
-                symbolStack.push(char)
+                list[list.length-1].str += letter
             }
         }
-        else if(opens.includes(char)) {
-            rest += char
-            symbolStack.push(char)
-        }else if(closes.includes(char)) {
-            rest += char
-            symbolStack.pop()
-        }else if( enders.includes(char) ){
-            tmpArray.push( rest )
-            tmpArray.push( char )
-            rest = ''
-        }else{
-            rest += char // ' ' + char + ' '
-        }
+        return list
+    }
 
-        if( i===string.length-1 ){
-            tmpArray[ tmpArray.length ] = ((tmpArray[ tmpArray.length ] || '') + rest).unspace()
+    const levelFunc = () => {
+        for(let i=0; i<str.length; i++){
+            let letter = str[i]
+        
+            if(skipI.includes(i) ){
+                if(!stringDepth) {list[list.length-1].letter += letter}
+                continue
+            }
+
+            let hasMatch = matchAny(str.slice(i), execluding)        
+            if(hasMatch.match){
+                for(let j=i;j<hasMatch.length+i;j++){
+                    skipI.push( j )
+                }
+                i===0 && list.push({str:'', letter, type: stringDepth})
+                if(stringDepth){
+                    if(letter === strChar || (letter === '\n' && strChar!=='`')){
+                        strChar = ''; stringDepth--;
+                    }
+                    list.push({str:'', type: stringDepth})
+                }else{
+                    strChar = letter; stringDepth++
+                    list.push({str: '', letter, type: stringDepth})
+                }
+            }else{
+                i===0 && list.push({str:'', type: stringDepth})
+                list[list.length-1].str += letter
+            }
         }
-    })
-    return tmpArray .filter( el => el!=='' )
+        return list
+    }
+
+    var stringDepth = 0
+    var strChar = ''
+    inCode = false
+    var list = []
+    var skipI = []
+    if(isString){ return stringFunc() } 
+    else { return levelFunc() }
 }
 
 
-breakFoundExpr = (str) => {
-    // todo
-    let tmp = []
-    let _new = false
-    // let rest = ''
-    str.split('').forEach( (char,i) =>{
-        if(allChars.includes(char)){
-            tmp.push( char )
-            _new = true
-            // rest = ''
-        }else{
-            if(_new){
-                tmp.push( char )
-                _new = false
-            } else if(tmp[tmp.length-1]) {
-                tmp[tmp.length-1] += char
-            } else {
-                tmp[tmp.length-1] = char
+const reconstruct = (blocks, isString) => {
+    if(isString){
+        let str = ''
+        for(let block of blocks){
+            if(block.letter){
+                str += block.letter + block.str + block.letter 
+            }else{
+                str += block.str
             }
         }
-    })
-    // tmp.push(rest)
-    return tmp
+        return str
+    }
 }
 
-// console.log(breakFoundExpr('word1 word2 word3,word4 / f2'))
-// .join('')
-let str = `let first = 'first string';
-let myArray = [1,2, 3]
-console.log('Oui'); let tmp = [ a for a in [ b for b in [ c for c in myArray ] ] ] ;`
+let code = `
+var var1 = 'string1'
+var var2  = \`
+xx1
+xx2
+xx3
+\`
+let extract = _{ prem = _{ second _{third}_}_}_
+`
+var txtt = 'var = "val"; var2 = `val2`; adasdsd'
+var gett = extractCode(txtt , ['"', '"', '`'], 0)
+var recc = reconstruct( gett, 1 )
+console.log( `mine| ${recc}\ntext| ${txtt}`, recc===txtt )
