@@ -64,11 +64,69 @@ const splitWords = (strArray) => {
 // "loop {{i}} to {{e}} "
 // list: [loop i to e]
 
-let terminals = ['{{', '}}']
+let terminals = ['{', '}']
+let t = terminals
+let ts = ['\\{', '\\}']
 let symbs = ['?']
+let escapeChar = '#'
 
-let temp = `{{ array }} [{{ n }}]`
-console.log(splitWords( splitChars(temp, ['{{']) ))
+const parseTemp = (temp) => {
+    let array = [{value:''}]
+    let skipI = []
+
+    let inVar = false
+
+    for (let i = 0; i < temp.length; i++) {
+        const letter = temp[i];
+        let last = array.length ? array[array.length-1] : array[0]
+        if(skipI.includes(i)){last.value = (last.value||'')+letter;}
+        if(letter === escapeChar){
+            skipI.push(i+1)
+            continue;
+        }
+        if( t[0] === letter ){
+            inVar = true
+            array.push({value: '', type: 'var'})
+            continue
+        }
+        else if( t[1] === letter ){
+            inVar = false
+            array.push({type:'word', value: ''})
+            continue
+        }
+        if(inVar){
+            if (!letter.match(/\s/)){
+                last.value += letter 
+            }
+        }else{
+            if(symbolsArray.includes(letter)){
+                array.push({
+                    value: letter,
+                    type: 'symbol'
+                })
+                array.push({})
+            }else if(letter.match(/\s/)){
+                array.push({})
+            }
+            else{
+                last.value = (last.value||'')+letter;
+                last.type = 'word'
+            }
+        }
+
+    }
+    array.forEach((w, i) => {
+        if(array[i].value){
+            return array[i].value.trim()
+        }
+    })
+    return array.filter((w, i) => Object.keys(w).length && w && w.value )
+}
+
+// next up selecting group and non required / default values
+let temp = ` word word word {array}[{n}]`
+console.log( parseTemp(temp),'xxx' )
+// console.log(( splitChars(temp, ['{', '}']) ))
 
 
 // console.log(

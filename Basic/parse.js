@@ -5,116 +5,115 @@ let terminals = ['{{', '}}']
 let quotes = ['"', "'", '`']
 
 
-exports.matchAny = (str, needles) => {
-    for(let i = 0; i < needles.length; i++){
-        if(str.slice(0, needles[i].length)===(needles[i])){
-            return {
-                match: true,
-                length: needles[i].length,
-            }
-        }
-    }
-    return {match: false}
-}
-
-exports.stringFunc = (str, execluding) => {
-    var list = [{str:''}]
-    var stringDepth = 0
-    var skipI = []
-
-    for(let i=0; i<str.length; i++){
-        letter = str[i]
-        if(skipI.includes(i) ){ continue }
-
-        if(str.slice(i, i + execluding[0].length)===execluding[0]){
-            stringDepth++
-            str = str.slice(execluding[0].length-1)
-            list.push({str: '', level:stringDepth})
-            for(let i=0;i<execluding[0].length;i++){skipI.push(i)}
-
-        }else if(str.slice(i, i + execluding[1].length)===execluding[1]){
-            stringDepth--
-            str = str.slice(execluding[1].length-1)
-            list.push({str: '', level:stringDepth})
-            for(let i=0;i<execluding[1].length;i++){skipI.push(i)}
-
-        }else{
-            list[list.length-1].str += letter
-        }
-    }
-    return list
+let nestedHELP = (str, anal) => {
+    // 
+    // aaaaaaaaaaaaaaa {{ letter xxx {{ letter y }} }}
+    // aaaaaaaaaaaaaaa
+    // {
+    // {
+        // if i & i-1 in anal
+            // send to self
+                // letter xxx
+                // {
+                // {
+                    // send to self 
+                        // letter y
+                        // }
+                        // }
+                        // return p_y
+                // return z_xxx p_y
 }
 
 
-exports.levelFunc = (str, execluding) => {
+exports.extracteur = (str, exeluding, strings, depth=0) => {
+    const find = (str, needle, i) => (str.slice(i,i+needle.length)===needle)
+    const findAny = (str, needles, i) => needles.some(needle => (str.slice(i,i+needle.length)===needle))
+    const range = (s, e) => {
+        let array = []
+        for (let i = s; i < e; i++) { array.push(i) }
+        return array
+    }
+    const handle = (str, i) => {
+        console.log(`handling "${str}"`)
+        return '('+str+')'
+    }
     var skipI = []
-    var list = []
-    var stringDepth = 0
-    for(let i=0; i<str.length; i++){
-        let letter = str[i]
+    var isOpen = false
     
-        if(skipI.includes(i) ){
-            if(!stringDepth) {list[list.length-1].letter += letter}
-            continue
+    var accum = ''
+    var block = {
+        final: '',
+        children: [],
+        finals: [],
+    }
+    for (let i = 0; i < str.length; i++) {
+        if(skipI.includes(i)){ 
+            // console.log('skip', str[i]);
+            continue;
         }
-
-        let hasMatch = matchAny(str.slice(i), execluding)        
-        if(hasMatch.match){
-            for(let j=i;j<hasMatch.length+i;j++){
-                skipI.push( j )
-            }
-            i===0 && list.push({str:'', letter, type: stringDepth})
-            if(stringDepth){
-                if(letter === strChar || (letter === '\n' && strChar!=='`')){
-                    strChar = ''; stringDepth--;
-                }
-                list.push({str:'', type: stringDepth})
-            }else{
-                strChar = letter; stringDepth++
-                list.push({str: '', letter, type: stringDepth})
-            }
-        }else{
-            i===0 && list.push({str:'', type: stringDepth})
-            list[list.length-1].str += letter
+        // console.log(skipI)
+        let letter = str[i];
+        let foundOpen = find(str, exeluding[0], i)
+        let foundClose = find(str, exeluding[1], i)
+        if( foundOpen ){
+            // console.log(str, i)
+            var res = this.extracteur(str.slice(i+exeluding[0].length), exeluding, '', depth+1 )
+            // console.log(res.final)
+            // block.children.push( res )
+            // block.finals.push( res.final )
+            res.final ? block.final += handle(res.final, depth) : null
+            skipI.push( ...range(i, i + res.len + exeluding[1].length ) )
+        } else if(foundClose){
+            skipI.push( [i, i + exeluding[1].length] )
+            accum ? block.final += handle(accum) : 0            
+            block.len = i
+            return block
+        } else if(isOpen) {
+            accum += letter
+        }else if(!isOpen){
+            block.final += letter
         }
     }
-    return list
+    accum ? block.final += handle(accum) : 0
+    return block
 }
 
 
 
-exports.reconstruct = (blocks, isString) => {
-    if(isString){
-        let str = ''
-        for(let block of blocks){
-            if(block.letter){
-                str += block.letter + block.str + block.letter 
-            }else{
-                str += block.str
-            }
+
+exports.reconstructCode = (str, anal) => {
+    let ret = ''
+    for (let i = 0; i < anal.length; i++) {
+        const code = anal[i];
+        ret += (str.slice(code[0], code[1]))
+        if(code.children){
+            console.log('nested', this.reconstructCode(str, code.children) )
+            ret +=  this.reconstructCode(str, code.children) + '____'
         }
-        return str
     }
+    return ret
 }
 
 
 
-// let code = `
-// var var1 = 'string1'
-// var var2  = \`
-// xx1
-// xx2
-// xx3
-// \`
-// let extract = _{ prem = _{ second _{third}_}_}_
-// `
-// txtt = 'var = "val"; var2 = `val2`; adasdsd'
-// gett = stringFunc(txtt , ['"', '"', '`'], 0)
-// recc = reconstruct( gett, 1 )
-// console.log( `mine| ${recc}\ntext| ${txtt}`, recc===txtt )
+// let code = `aa 'asd' asd`
+txtt = 'Hay {{code}}'
+txtt = '"as`d"a"`s"'
+txtt = `t0 {{ t1 {{ t2 }} }}`
 
-// txtt = code
-// gett = stringFunc(txtt , ['"', '"', '`'], 0)
-// recc = reconstruct( gett, 1 )
-// console.log(recc)
-// console.log( `mine| ${recc}\ntext| ${txtt}`, recc===txtt )
+
+console.log( 
+    // ':- ',
+    // txtt.slice(
+    //     ...
+    // util.inspect(
+        // this.reconstructCode(
+            // txtt, 
+            this.extracteur(txtt, ['{{','}}'])
+        // )
+    //     ,{showHidden: false, depth: null}
+    // )
+    //     [0]
+    // )
+    // ,'"'
+)
