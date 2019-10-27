@@ -238,3 +238,36 @@ exports.extracteur = (str, execluding, extract=true, nested=false, initial=0, is
     console.log(value.xxx)
     return value
 }
+
+
+
+
+
+exports.reconstructCode = (str, anal) => {
+    let ret = ''
+    for (let i = 0; i < anal.length; i++) {
+        const code = anal[i];
+        ret += (str.slice(code[0], code[1]))
+        if(code.children){
+            console.log('nested', this.reconstructCode(str, code.children) )
+            ret +=  this.reconstructCode(str, code.children) + '____'
+        }
+    }
+    return ret
+}
+
+// console.log( 
+//     // ':- ',
+//     // txtt.slice(
+//     //     ...
+//     // util.inspect(
+//         // this.reconstructCode(
+//             // txtt, 
+//             this.extracteur(txtt, ['{{','}}'], '','', true)
+//         // )
+//     //     ,{showHidden: false, depth: null}
+//     // )
+//     //     [0]
+//     // )
+//     // ,'"'
+// )
