@@ -90,7 +90,7 @@ const compileMAIN = (sourceCode, userRules) => {
         let result = rule.output(obj)
         return result
     }catch(e){
-        console.log('An error has occured')
+        console.log('An error has occured, please double check your rules.', e)
     }
 }
 
@@ -118,35 +118,50 @@ const GETTHERIGHTRULE = (code, userRules) => {
 
     return matching
 }
-const comp2 = (temp , found) => {
-    var vars = {}
-    inVar = false
-    for (let t = 0; t < temp.length; t++) {
-        let tempWord = temp[t];
-        if(tempWord.type==='var'){
-            inVar = true
+
+const comp2 = (template, found) => {
+    let vars = {}
+    let inVar = false
+    let adj = 0
+    let skipI = false
+    for (let i = 0; i < template.length; i++) {
+        let tempWord = template[i];
+        lastInVar = inVar
+        inVar =  tempWord.type === 'var'
+        if(skipI){
+            skipI = false
             continue
         }
-        for (let f = t; f < found.length; f++) {
-            let foundWord  = found[f];
-            if(tempWord.value === foundWord.value && tempWord.type !== 'var'){
-                console.log(foundWord.value)
+        for (let j = i+adj; j < found.length; j++) {
+            const foundWord = found[j];
+
+            console.log(
+                i, j, template[i].value, found[j].value,
+                template[i+1] && template[i+1].value === foundWord.value,
+                tempWord.type!=='var' && tempWord.value === foundWord.value 
+            )
+            if( template[i+1] && template[i+1].value === foundWord.value){
+                // console.log('-break 1', foundWord, i, j)
+                skipI = true
+                adj--
+                console.log('stop 1')
                 break
-            }else if(tempWord.type==='var'){
-                if(temp[t-1] && temp[t-1].value===found[f].value){
-                    continue
-                }
-                let nextTemp = temp[t+1]
-                let nextFound = found[f+1]
-                vars[tempWord.value] = (vars[tempWord.value] || '')
-                vars[tempWord.value] += ' '+foundWord.value
+            }
+            if( tempWord.type!=='var' && tempWord.value === foundWord.value ){
+                // console.log('-break 2', foundWord, i, j)
+                // adj++
+                console.log('stop 2')
+                break
+            }
+            adj++
+            if(inVar){
+                vars[tempWord.value] = (vars[tempWord.value]||'')
+                vars[tempWord.value] += (foundWord.value)
                 vars[tempWord.value] = vars[tempWord.value].trim()
-                if(nextTemp && nextFound && nextTemp.value === nextFound.value){
-                    break
-                }
             }
         }
     }
+    
     return vars
 }
 
@@ -157,34 +172,8 @@ function handle (str, id) {
 
 
 
-userRules = [
-    {
-        id: 'pyArrayNegative',
-        template: '{{array}} [ {{n1}} ]',
-        output: function({array, n1}){
-            if(n1<=0){
-                return `${array}[${n1}]`
-            }
-            return `${array}[${array}.length - ${n1}]`
-        }
-    },
-    {
-        id: 'minusArrowFunction',
-        template: '({args}) a1 a2 a3 a4 {{code}}',
-        output: function({args, code}){
-            return `(${args}) => ,${code}`
-        }
-    }
-]
 console.log(
-    // compileMAIN('arr [2]', userRules),
-    compileMAIN('(arg1, arg2) a1 a2 a3 a4 aaa', userRules), ' dash FAAIIILLLLL'
-    // compileMAIN('a z hhj b', userRules),
+    compileMAIN('arr [2]', userRules),
+    compileMAIN('(arg1, arg2) -> {func1(); funct2()}', userRules),
+    compileMAIN('let w1.w2 = w3.w4', userRules),
 )
-
-// console.log(
-//     comp2(
-//         runRules.parseTemp('{x}z{y}', true),
-//         runRules.parseCode('a z hhj b', false),
-//     )
-// )

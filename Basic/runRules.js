@@ -11,7 +11,6 @@ var symbolsArray = '\'"\\/,`!@#$%^&*+-;:?><=[]{}().'.split('')
 let terminals = ['{', '}']
 let t = terminals
 let escapeChar = '#'
-
 const parseTemp = (temp, findVars=true) => {
     let array = [{value:''}]
     let skipI = []
@@ -26,7 +25,7 @@ const parseTemp = (temp, findVars=true) => {
             skipI.push(i+1)
             continue;
         }
-        if( t[0] === letter && findVars){
+        if( t[0] === letter && findVars ) {
             inVar = true
             array.push({value: '', type: 'var'})
             continue
@@ -37,14 +36,16 @@ const parseTemp = (temp, findVars=true) => {
             continue
         }
         if(inVar && findVars){
-            if (!letter.match(/\s/)){
+            if (letter.match(/\s/)){
+                carriedSpace = letter
+            }else{
                 last.value += letter 
             }
         }else{
             if(symbolsArray.includes(letter)){
                 array.push({
                     value: letter,
-                    type: 'symbol'
+                    type: 'symbol',
                 })
                 array.push({})
             }else if(letter.match(/\s/)){

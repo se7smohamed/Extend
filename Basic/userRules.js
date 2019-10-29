@@ -10,12 +10,19 @@ exports.rules = [
             }
             return `${array}[${array}.length - ${n1}]`
         }
-    },
-    {
+    }
+    ,{
         id: 'minusArrowFunction',
         template: '({args}) -> {{code}}',
         output: function({args, code}){
             return `(${args}) => ${code}`
+        }
+    },{
+        id: 'letToVar',
+        template: 'let {var} = {value}',
+        output: function(o){
+            console.log(o)
+            return `var ${o.var} = ${o.value}`
         }
     }
 ]
