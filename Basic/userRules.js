@@ -54,14 +54,5 @@ exports.rules = [
         output: function(o){
             return `for (let ${o.i} = 0; ${o.i} < ${o.max}; ${o.i}++) ${o.code}`
         }
-    }, {
-        id: 'RegexSpace',
-        template: '/{code}\n{spaces}/',
-        output: function(o){
-            console.log(o)
-            if( ! (o.code && o.spaces) ){ return false }
-
-            return `for (let ${o.i} = 0; ${o.i} < ${o.max}; ${o.i}++) ${o.code}`
-        }
     }
 ]
