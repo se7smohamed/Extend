@@ -1,6 +1,3 @@
-const userRules = require('./userRules')
-const parse = require('./parse')
-
 var symbolsArray = '\'"\\/,`!@#$%^&*+-;:?><=[]{}().'.split('')
 
 // parseRule
@@ -20,8 +17,13 @@ const parseTemp = (temp, findVars=true) => {
     for (let i = 0; i < temp.length; i++) {
         const letter = temp[i];
         let last = array.length ? array[array.length-1] : array[0]
-        if(skipI.includes(i)){last.value = (last.value||'')+letter;}
+        if(skipI.includes(i)){
+            console.log(temp[i-1], temp[i],temp[i+1])
+            last.value = (last.value||'')+letter;
+            continue
+        }
         if(letter === escapeChar){
+            // console.log(letter)
             skipI.push(i+1)
             continue;
         }

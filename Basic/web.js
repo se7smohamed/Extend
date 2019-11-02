@@ -1,9 +1,78 @@
-// Compiler using mustache syntax
-let userRules = require('./userRules').rules
-let runRules = require('./runRules')
+let userRules = eval(editor3.getValue())
+// runrules.js
+var symbolsArray = '\'"\\/,`!@#$%^&*+-;:?><=[]{}().'.split('')
+let terminals = ['{', '}']
+let t = terminals
+let escapeChar = '#'
+
+const parseTemp = (temp, findVars=true) => {
+    let array = [{value:''}]
+    let skipI = []
+
+    let inVar = false
+
+    for (let i = 0; i < temp.length; i++) {
+        const letter = temp[i];
+        let last = array.length ? array[array.length-1] : array[0]
+        if(skipI.includes(i)){
+            console.log(temp[i-1], temp[i],temp[i+1])
+            last.value = (last.value||'')+letter;
+            continue
+        }
+        if(letter === escapeChar){
+            // console.log(letter)
+            skipI.push(i+1)
+            continue;
+        }
+        if( t[0] === letter && findVars ) {
+            inVar = true
+            array.push({value: '', type: 'var'})
+            continue
+        }
+        else if( t[1] === letter && findVars){
+            inVar = false
+            array.push({type:'word', value: ''})
+            continue
+        }
+        if(inVar && findVars){
+            if (letter.match(/\s/)){
+                carriedSpace = letter
+            }else{
+                last.value += letter 
+            }
+        }else{
+            if(symbolsArray.includes(letter)){
+                array.push({
+                    value: letter,
+                    type: 'symbol',
+                })
+                array.push({})
+            }else if(letter.match(/\s/)){
+                array.push({})
+            }
+            else{
+                last.value = (last.value||'')+letter;
+                last.type = 'word'
+            }
+        }
+    }
+    array.forEach((w, i) => {
+        if(array[i].value){
+            return array[i].value.trim()
+        }
+    })
+    return array.filter((w, i) => Object.keys(w).length && w && w.value )
+}
+
+let parseTemplate = (str) => parseTemp(str, true)
+let parseCode = (str) => parseTemp(str, false)
 
 
-exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
+
+// parse.js
+
+
+extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
     // extract code that needs processing
     const find = (str, needle, i) => (str.slice(i,i+needle.length)===needle)
     const range = (s, e) => {
@@ -44,13 +113,12 @@ exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
         if( foundOpen ){
             var res = this.extracteur(sourceCode.slice(i+exeluding[0].length), exeluding, '', depth+1, false )
             if(res.text){
-                block.text += compileMAIN(res.text, userRules) || ''
+                block.text += compileMAIN(res.text, userRules)
                 ingoreI.push( ...range(i, i + res.len + 2 * exeluding[1].length ) )
             }
         } else if(foundClose){
             ingoreI.push( ...range(i, i + exeluding[1].length) )
-            let comp = 
-            accum ? block.text += compileMAIN(accum, userRules) : null
+            accum ? block.text += compileMAIN(accum, userRules) : 0            
             block.len = i
             if(!full) {
                 block.end = 111
@@ -72,14 +140,14 @@ exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
 
 let handleRules = () => {
     for (const rule of userRules) {
-        rule.parsed = runRules.parseTemp(rule.template)
+        rule.parsed = parseTemplate(rule.template)
     }
 }
 handleRules()
 
 const compileMAIN = (sourceCode, userRules) => {
     try{
-        let code = runRules.parseCode(sourceCode)
+        let code = parseCode(sourceCode)
         let rules = GETTHERIGHTRULES(code, userRules)
         for (const rule of rules) {
             let obj = getVARS(rule.parsed, code)
@@ -90,7 +158,10 @@ const compileMAIN = (sourceCode, userRules) => {
         }
     }catch(e){
         console.log('An error has occured, please double check your rules.', e)
+        // return sourceCode
     }
+    // return sourceCode
+
 }
 
 const GETTHERIGHTRULES = (code, userRules) => {
@@ -160,12 +231,6 @@ const getVARS = (template, found) => {
 
 
 
-
-// some tests
-console.log(
-    // compileMAIN('arr [2]', userRules),
-    // compileMAIN('arr [2, -3,4]', userRules),
-    // compileMAIN('(arg1, arg2) -> {func1(); funct2()}', userRules),
-    // compileMAIN('let w1.w2 = w3.w4', userRules),
-    // compileMAIN('for j to 100: { xx({a:2}) }', userRules),
-)
+const compile = (sourceCode) => {
+    return extracteur(sourceCode, ['{{', '}}']).text
+}
