@@ -1,3 +1,5 @@
+// will be used for a demo web page
+
 let userRules = eval(editor3.getValue())
 // runrules.js
 var symbolsArray = '\'"\\/,`!@#$%^&*+-;:?><=[]{}().'.split('')

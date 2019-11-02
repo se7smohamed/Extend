@@ -75,8 +75,6 @@ let handleRules = () => {
         rule.parsed = runRules.parseTemp(rule.template)
     }
 }
-handleRules()
-
 const compileMAIN = (sourceCode, userRules) => {
     try{
         let code = runRules.parseCode(sourceCode)
@@ -158,14 +156,4 @@ const getVARS = (template, found) => {
     return vars
 }
 
-
-
-
-// some tests
-console.log(
-    // compileMAIN('arr [2]', userRules),
-    // compileMAIN('arr [2, -3,4]', userRules),
-    // compileMAIN('(arg1, arg2) -> {func1(); funct2()}', userRules),
-    // compileMAIN('let w1.w2 = w3.w4', userRules),
-    // compileMAIN('for j to 100: { xx({a:2}) }', userRules),
-)
+handleRules()

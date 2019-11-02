@@ -1,13 +1,8 @@
 var symbolsArray = '\'"\\/,`!@#$%^&*+-;:?><=[]{}().'.split('')
-
-// parseRule
-// temps:
-// "loop {{i}} to {{e}} "
-// list: [loop i to e]
-
 let terminals = ['{', '}']
 let t = terminals
 let escapeChar = '#'
+
 const parseTemp = (temp, findVars=true) => {
     let array = [{value:''}]
     let skipI = []
@@ -23,7 +18,6 @@ const parseTemp = (temp, findVars=true) => {
             continue
         }
         if(letter === escapeChar){
-            // console.log(letter)
             skipI.push(i+1)
             continue;
         }
@@ -65,42 +59,8 @@ const parseTemp = (temp, findVars=true) => {
             return array[i].value.trim()
         }
     })
-    return array.filter((w, i) => Object.keys(w).length && w && w.value )
+    return array.filter((w) => Object.keys(w).length && w && w.value )
 }
-
-// next up selecting group and non required / default values
-let temp = ` word word word {array}[{n}]`
-// console.log( parseTemp(temp),'from runrules' )
-// console.log(userRules)
-// console.log( parseTemp(userRules.rules[0].template),'from runrules' )
-// console.log( parseTemp('array [22]', false), 'xx' )
 
 exports.parseTemp = (str) => parseTemp(str, true)
 exports.parseCode = (str) => parseTemp(str, false)
-// console.log(( splitChars(temp, ['{', '}']) ))
-
-
-// console.log(
-//     splitWords( 
-//         splitChars(temp)
-//     )
-// )
-// console.log(
-//     splitChars('ajdhjs a#fl; !@#h ')
-// )
-
-// let x = [1,2,3,4]
-// var last = {{ x[-2] }}
-// var even = {{ numbers[::2] }}
-// {{
-//     loop i < array.length {
-
-//     }
-// }}
-
-// odds = {{ [ a for a in lst if a%2 ] }}
-// xxxx = '[ {{var}} for {{var}} in {{arr}} if {{cnd}} ]'
-
-// for (let i=0; i<rules.length; i++){
-    
-// }
