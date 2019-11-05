@@ -1,19 +1,21 @@
-let array = [
-    [ [1,2,3,4,5], [1,2,3,4,5], [1,2,3,4,5], [1,2,3,4,5], [1,2,3,4,5] ],
-    [ [1,2,3,4,5], [1,2,3,4,5], [1,2,3,4,5], [1,2,3,4,5], [1,2,3,4,5] ]
-]
+class D2Vector{
+    constructor(x, y){ this.x = x; this.y = y; }
+    _add_(vector){ return new D2Vector( this.x + vector.x, this.y + vector.y ) }
+}
 
-console.log( array[1][2][array[1][2].length-2] )
+var v1 = new D2Vector( 2, 1 );var v2 = new D2Vector( 3, 7 );var v3 = new D2Vector( 30, 10 );
+var v4 = (v1._add_(v2))._div_(v3)
 
-myFunction = function(args) {
-    var defaults = {"arg1":null,"arg2":"111","arg3":null,"arg4":null}
-    var keys = ["arg1","arg2","arg3","arg4"]
+array[array.length -3]
+xxx = function(args) {
+    var defaults = {"a1":null,"a2":null}
+    var keys = ["a1","a2"]
     Object.assign( defaults, args )
     for( var i=0; i<keys.length; i++ ) {
         var prop = keys[i]
         this[prop] = defaults[prop] || defaults[i]
     }
-    console.log(this.arg4)
+    sss
 }
 
-myFunction({0:2.213,arg3:8,arg4:'alert'})
+xxx({0:1,a2:3})

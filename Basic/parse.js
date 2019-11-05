@@ -70,10 +70,11 @@ exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
 }
 
 
-let handleRules = () => {
+let handleRules = (userRules) => {
     for (const rule of userRules) {
         rule.parsed = runRules.parseTemp(rule.template)
     }
+    return userRules
 }
 const compileMAIN = (sourceCode, userRules) => {
     try{
@@ -156,4 +157,5 @@ const getVARS = (template, found) => {
     return vars
 }
 
-handleRules()
+
+userRules = handleRules(userRules)

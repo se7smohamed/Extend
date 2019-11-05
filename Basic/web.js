@@ -1,7 +1,3 @@
-// will be used for a demo web page
-
-let userRules = eval(editor3.getValue())
-// runrules.js
 var symbolsArray = '\'"\\/,`!@#$%^&*+-;:?><=[]{}().'.split('')
 let terminals = ['{', '}']
 let t = terminals
@@ -22,7 +18,6 @@ const parseTemp = (temp, findVars=true) => {
             continue
         }
         if(letter === escapeChar){
-            // console.log(letter)
             skipI.push(i+1)
             continue;
         }
@@ -57,24 +52,45 @@ const parseTemp = (temp, findVars=true) => {
                 last.type = 'word'
             }
         }
+
     }
     array.forEach((w, i) => {
         if(array[i].value){
             return array[i].value.trim()
         }
     })
-    return array.filter((w, i) => Object.keys(w).length && w && w.value )
+    return array.filter((w) => Object.keys(w).length && w && w.value )
 }
 
-let parseTemplate = (str) => parseTemp(str, true)
-let parseCode = (str) => parseTemp(str, false)
+exports.parseTemp = (str) => parseTemp(str, true)
+exports.parseCode = (str) => parseTemp(str, false)
 
 
 
-// parse.js
 
 
-extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Compiler using mustache syntax
+let userRules = require('./userRules').rules
+let runRules = require('./runRules')
+
+
+exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
     // extract code that needs processing
     const find = (str, needle, i) => (str.slice(i,i+needle.length)===needle)
     const range = (s, e) => {
@@ -115,12 +131,13 @@ extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
         if( foundOpen ){
             var res = this.extracteur(sourceCode.slice(i+exeluding[0].length), exeluding, '', depth+1, false )
             if(res.text){
-                block.text += compileMAIN(res.text, userRules)
+                block.text += compileMAIN(res.text, userRules) || ''
                 ingoreI.push( ...range(i, i + res.len + 2 * exeluding[1].length ) )
             }
         } else if(foundClose){
             ingoreI.push( ...range(i, i + exeluding[1].length) )
-            accum ? block.text += compileMAIN(accum, userRules) : 0            
+            let comp = 
+            accum ? block.text += compileMAIN(accum, userRules) : null
             block.len = i
             if(!full) {
                 block.end = 111
@@ -140,16 +157,14 @@ extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
 }
 
 
-let handleRules = () => {
+let handleRules = (userRules) => {
     for (const rule of userRules) {
-        rule.parsed = parseTemplate(rule.template)
+        rule.parsed = runRules.parseTemp(rule.template)
     }
 }
-handleRules()
-
 const compileMAIN = (sourceCode, userRules) => {
     try{
-        let code = parseCode(sourceCode)
+        let code = runRules.parseCode(sourceCode)
         let rules = GETTHERIGHTRULES(code, userRules)
         for (const rule of rules) {
             let obj = getVARS(rule.parsed, code)
@@ -160,10 +175,7 @@ const compileMAIN = (sourceCode, userRules) => {
         }
     }catch(e){
         console.log('An error has occured, please double check your rules.', e)
-        // return sourceCode
     }
-    // return sourceCode
-
 }
 
 const GETTHERIGHTRULES = (code, userRules) => {
@@ -189,10 +201,10 @@ const GETTHERIGHTRULES = (code, userRules) => {
 
 const getVARS = (template, found) => {
     // all compiling is done here
-    // template array of parts/words of some rule
+    // template is array of parts/words of some rule
     // found is array of actuall source code (after some processing)
     // vars is the object returned containing all variables extracted
-    // adj is a cursor to keep up with different indexes between template and found eg: variable more than one word
+    // adj is a cursor to keep up with different indexes between template and found eg: variables consiting of more than one word
     let vars = {}
     let inVar = false
     let adj = 0
@@ -232,7 +244,4 @@ const getVARS = (template, found) => {
 }
 
 
-
-const compile = (sourceCode) => {
-    return extracteur(sourceCode, ['{{', '}}']).text
-}
+userRules = handleRules(userRules)

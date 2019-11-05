@@ -44,7 +44,7 @@ try{
 }
 
 
-var debugging = false
+var debugging = 1
 const writeToFile = (processed, fileName) => {
     fs.writeFile(fileName, processed, (err) => {
         console.log('Success.');
