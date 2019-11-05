@@ -1,7 +1,6 @@
 // user created rules
 
 let stringify = obj => {
-    console.log(obj)
     let str = '{'
     for (let prop in obj){
         str += prop + ':' + obj[prop] + ','
@@ -79,19 +78,14 @@ exports.rules = [
             })
             if( o.code[0]==='{' && o.code[o.code.length-1]==='}' ){
                 o.code = o.code.slice(1, -1)
-                console.log(o)
             }
-            return `function(args) {
-    let defaults = ${JSON.stringify(defs)}
-    let keys = ${JSON.stringify(Object.keys(defs))}
+return `function(args) {
+    var defaults = ${JSON.stringify(defs)}
+    var keys = ${JSON.stringify(Object.keys(defs))}
     Object.assign( defaults, args )
-    for( let i=0; i<keys.length; i++ ) {
-        prop = keys[i]
-        if(defaults[prop]===null){
-            this[prop] = defaults[i]
-        }else{
-            this[prop] = defaults[prop]
-        }
+    for( var i=0; i<keys.length; i++ ) {
+        var prop = keys[i]
+        this[prop] = defaults[prop] || defaults[i]
     }
     ${o.code}
 }`

@@ -114,10 +114,10 @@ const GETTHERIGHTRULES = (code, userRules) => {
 
 const getVARS = (template, found) => {
     // all compiling is done here
-    // template array of parts/words of some rule
+    // template is array of parts/words of some rule
     // found is array of actuall source code (after some processing)
     // vars is the object returned containing all variables extracted
-    // adj is a cursor to keep up with different indexes between template and found eg: variable more than one word
+    // adj is a cursor to keep up with different indexes between template and found eg: variables consiting of more than one word
     let vars = {}
     let inVar = false
     let adj = 0
