@@ -1,5 +1,15 @@
 // user created rules
 
+let stringify = obj => {
+    console.log(obj)
+    let str = '{'
+    for (let prop in obj){
+        str += prop + ':' + obj[prop] + ','
+    }
+    str = str.slice(0, -1) + '}'
+    return str
+}
+
 exports.rules = [
     {
         id: 'pyArrayNegative',
@@ -53,6 +63,53 @@ exports.rules = [
         template: '{i} to {max}: {code}',
         output: function(o){
             return `for (let ${o.i} = 0; ${o.i} < ${o.max}; ${o.i}++) ${o.code}`
+        }
+    }, {
+        id: 'namedArgumentsDeclare',
+        template: 'func({args}){code}',
+        output: function(o){
+            let args = o.args.split(',')
+            let defs = {}
+            args.map( (arg, i) => {
+                if(arg.includes('=')){
+                    defs[arg.split('=')[0]] = arg.split('=')[1]
+                }else{
+                    defs[arg] = null
+                }
+            })
+            if( o.code[0]==='{' && o.code[o.code.length-1]==='}' ){
+                o.code = o.code.slice(1, -1)
+                console.log(o)
+            }
+            return `function(args) {
+    let defaults = ${JSON.stringify(defs)}
+    let keys = ${JSON.stringify(Object.keys(defs))}
+    Object.assign( defaults, args )
+    for( let i=0; i<keys.length; i++ ) {
+        prop = keys[i]
+        if(defaults[prop]===null){
+            this[prop] = defaults[i]
+        }else{
+            this[prop] = defaults[prop]
+        }
+    }
+    ${o.code}
+}`
+        }
+    }, {
+        id: 'namedArgumentsCall',
+        template: '{func}({args})',
+        output: function(o){
+            let args = o.args.split(',')
+            let defs = {}
+            args.map( (arg, i) => {
+                if(arg.includes('=')){
+                    defs[arg.split('=')[0]] = arg.split('=')[1]
+                }else{
+                    defs[i] = arg
+                }
+            })
+            return `${o.func}(${stringify(defs)})`
         }
     }
 ]

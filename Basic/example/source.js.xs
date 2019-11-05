@@ -15,6 +15,9 @@ let array = [
 ]
 
 console.log( {{array [1,2,-2]}} )
-{{ i to 100: {
-    console.log(i)
-}}}
+
+f = {{ func (arg1, arg2=111, arg3, arg4) {
+    console.log(this.arg4)
+} }}
+
+{{ f(2.213, arg3=8, arg4=alert) }}
