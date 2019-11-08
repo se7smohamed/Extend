@@ -13,8 +13,8 @@ const parseTemp = (temp, findVars=true) => {
         const letter = temp[i];
         let last = array.length ? array[array.length-1] : array[0]
         if(skipI.includes(i)){
-            console.log(temp[i-1], temp[i],temp[i+1])
             last.value = (last.value||'')+letter;
+            last.str = (last.str||'') + letter
             continue
         }
         if(letter === escapeChar){
@@ -35,20 +35,40 @@ const parseTemp = (temp, findVars=true) => {
             if (letter.match(/\s/)){
                 carriedSpace = letter
             }else{
-                last.value += letter 
+                last.value += letter
+            }
+
+            let tmp = array.length-1
+            while(tmp >= 0){
+                if(array[tmp].value){ array[tmp].str = (array[tmp].str||'') + letter; break }
+                tmp--
             }
         }else{
             if(symbolsArray.includes(letter)){
                 array.push({
                     value: letter,
                     type: 'symbol',
+                    str: letter
                 })
                 array.push({})
             }else if(letter.match(/\s/)){
+                let tmp = array.length-1
+                while(tmp >= 0){
+                    if(array[tmp].value){ array[tmp].str = (array[tmp].str||'') + letter; break }
+                    tmp--
+                }
                 array.push({})
+            }else if(letter === ('\n')){
+                last.str = (last.str||'') + letter
             }
             else{
                 last.value = (last.value||'')+letter;
+                
+                let tmp = array.length-1
+                while(tmp >= 0){
+                    if(array[tmp].value){ array[tmp].str = (array[tmp].str||'') + letter; break }
+                    tmp--
+                }
                 last.type = 'word'
             }
         }
@@ -59,11 +79,27 @@ const parseTemp = (temp, findVars=true) => {
             return array[i].value.trim()
         }
     })
-    return array.filter((w) => Object.keys(w).length && w && w.value )
+    return array
+        .filter((w) => Object.keys(w).length && w && w.value )
 }
+var runRules = {}
+runRules.parseTemp = (str) => parseTemp(str, true)
+runRules.parseCode = (str) => parseTemp(str, false)
 
-exports.parseTemp = (str) => parseTemp(str, true)
-exports.parseCode = (str) => parseTemp(str, false)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -86,11 +122,9 @@ exports.parseCode = (str) => parseTemp(str, false)
 
 
 // Compiler using mustache syntax
-let userRules = require('./userRules').rules
-let runRules = require('./runRules')
 
-
-exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
+let parse = {}
+parse.extracteur = (sourceCode, exeluding, userRules) => {
     // extract code that needs processing
     const find = (str, needle, i) => (str.slice(i,i+needle.length)===needle)
     const range = (s, e) => {
@@ -103,8 +137,8 @@ exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
     var ingoreI = []
     var isOpen = false
     var inStr = {is: false, char: ''}
-    var accum = ''
-    var block = { text: '', succ: 1, }
+    var accumulator = ''
+    var block = { text: '', succ: 1 }
     for (let i = 0; i < sourceCode.length; i++) {
         let letter = sourceCode[i];
         if(ingoreI.includes(i)){
@@ -129,45 +163,49 @@ exports.extracteur = (sourceCode, exeluding, strings, depth=0, full=1) => {
         let foundOpen = find(sourceCode, exeluding[0], i)
         let foundClose = find(sourceCode, exeluding[1], i)
         if( foundOpen ){
-            var res = this.extracteur(sourceCode.slice(i+exeluding[0].length), exeluding, '', depth+1, false )
+            var res = parse.extracteur(sourceCode.slice(i+exeluding[0].length), exeluding, userRules,  )
             if(res.text){
                 block.text += compileMAIN(res.text, userRules) || ''
-                ingoreI.push( ...range(i, i + res.len + 2 * exeluding[1].length ) )
+                ingoreI.push( ...range(i, i + res.text.length+ 2 * exeluding[1].length ) )
             }
         } else if(foundClose){
             ingoreI.push( ...range(i, i + exeluding[1].length) )
-            let comp = 
-            accum ? block.text += compileMAIN(accum, userRules) : null
-            block.len = i
-            if(!full) {
-                block.end = 111
-                return block
-            }
+            if(accumulator){ block.text += compileMAIN(accumulator, userRules) }
+            return block
         } else if(isOpen) {
-            accum += letter
+            accumulator += letter
         }else if(false){
 
         }else if(!isOpen){
             block.text += letter
         }
     }
-    accum ? block.text += compileMAIN(accum, userRules) : 0
+    accumulator ? block.text += compileMAIN(accumulator, userRules) : 0
     block.end = true
     return block
 }
 
-
 let handleRules = (userRules) => {
     for (const rule of userRules) {
         rule.parsed = runRules.parseTemp(rule.template)
+        rule.enum = rule.parsed.map( word => {
+            if(word.type === 'word'){
+                if (!rule.config) return word
+                // console.log(rule.config.words)
+                return rule.config.words ? rule.config.words.map(w => w.enum)[0] : word
+            }
+            return []
+        })
+        // .filter(w => w)
     }
+    return userRules
 }
 const compileMAIN = (sourceCode, userRules) => {
     try{
         let code = runRules.parseCode(sourceCode)
         let rules = GETTHERIGHTRULES(code, userRules)
         for (const rule of rules) {
-            let obj = getVARS(rule.parsed, code)
+            let obj = getVARS(rule, code)
             let result = rule.output(obj)
             if(result!==false){
                 return result
@@ -183,9 +221,12 @@ const GETTHERIGHTRULES = (code, userRules) => {
     for (const rule of userRules) {
         rule.words = rule.parsed.filter(el => el.type !== 'var')
         let passing = true 
-        for( let word of rule.words ) {
-            for( let foundWord of code ) {
-                if( word.value!==foundWord.value ){
+        for( let i = 0; i < rule.words.length; i++ ) {
+            let word = rule.words[i]
+            for( let j = 0; j < code.length; j++ ) {
+                let foundWord = code[j]
+                let res = compareWithKeyword(foundWord, rule, j)
+                if( !res ){
                     passing = false;
                     continue;
                 }
@@ -199,12 +240,23 @@ const GETTHERIGHTRULES = (code, userRules) => {
     return matching
 }
 
-const getVARS = (template, found) => {
+var compareWithKeyword = (found, rule, i) => {
+    let template = rule.parsed
+    let word = template[i]
+    if(rule.config && rule.enum && rule.enum[i]){
+        return rule.enum[i].includes(found.value) || found.value === word.value 
+    }
+    return found && word && found.value === word.value
+}
+
+const getVARS = (rule, found) => {
     // all compiling is done here
     // template is array of parts/words of some rule
     // found is array of actuall source code (after some processing)
     // vars is the object returned containing all variables extracted
     // adj is a cursor to keep up with different indexes between template and found eg: variables consiting of more than one word
+    // console.log(rule.template)
+    let template = rule.parsed
     let vars = {}
     let inVar = false
     let adj = 0
@@ -213,35 +265,61 @@ const getVARS = (template, found) => {
         let tempWord = template[i];
         lastInVar = inVar
         inVar =  tempWord.type === 'var'
+        
         if(skipI){
             skipI = false
+            adj--
             continue
         }
         for (let j = i+adj; j < found.length; j++) {
             const foundWord = found[j];
+            // console.log(tempWord.value, template[i+1].value, ' | ', foundWord.value, i, j)
             // todo there is probably a better way to do this
 
             // am i looking at the next word in template? take a step back
-            if( template[i+1] && template[i+1].value === foundWord.value){
+            if( template[i+1] && compareWithKeyword(foundWord, rule, i+1)){
                 skipI = true
-                adj--
                 break
             }
-            // am i looking at the current word in template? this means im done 
-            if( tempWord.type!=='var' && tempWord.value === foundWord.value ){
+            // am i looking at the current word in template? this means im done, break to get to the next temp word
+            if( tempWord.type!=='var' && compareWithKeyword(foundWord, rule, i) ){
                 break
             }
             
+            // it's a vriable, increment adj by 1, add the str to the vars object (str version keeps spaces)
             adj++
             if(inVar){
                 vars[tempWord.value] = (vars[tempWord.value]||'')
-                vars[tempWord.value] += (foundWord.value)
-                vars[tempWord.value] = vars[tempWord.value].trim()
+                vars[tempWord.value] += (foundWord.str || foundWord.value) 
             }
         }
     }
     return vars
 }
 
+parse.handleRules = handleRules
 
-userRules = handleRules(userRules)
+
+
+
+let userRules = [
+    {
+        id: 'pyArrayNegative',
+        template: '{{array}} [ {{n1}} ]',
+        output: function({array, n1}){
+            // conflicting with another rule
+            if(n1.includes(',')){
+                return false
+            }
+            if(n1>=0 || isNaN(n1)){
+                return `${array}[${n1}]`
+            }
+            return `${array}[${array}.length${n1}]`
+        }
+    }
+]
+
+
+
+handleRules(userRules)
+const compile = (sourceCode) => parse.extracteur(sourceCode, ['{{', '}}'], userRules).text

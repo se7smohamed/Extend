@@ -11,6 +11,8 @@
 const fs = require('fs')
 const parse = require('./parse')
 const path = require('path')
+let userRules = require('./userRules').rules
+userRules = parse.handleRules(userRules)
 
 var fileName = '' 
 var buildName = '' 
@@ -51,7 +53,7 @@ const writeToFile = (processed, fileName) => {
     });
 }
 const compile = () => {
-    var value = parse.extracteur(sourceCode, ['{{', '}}']).text
+    var value = parse.extracteur(sourceCode, ['{{', '}}'], userRules).text
     if(debugging){
         console.log( value )
     }else{

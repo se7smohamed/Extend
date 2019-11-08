@@ -13,8 +13,8 @@ const parseTemp = (temp, findVars=true) => {
         const letter = temp[i];
         let last = array.length ? array[array.length-1] : array[0]
         if(skipI.includes(i)){
-            console.log(temp[i-1], temp[i],temp[i+1])
             last.value = (last.value||'')+letter;
+            last.str = (last.str||'') + letter
             continue
         }
         if(letter === escapeChar){
@@ -35,20 +35,40 @@ const parseTemp = (temp, findVars=true) => {
             if (letter.match(/\s/)){
                 carriedSpace = letter
             }else{
-                last.value += letter 
+                last.value += letter
+            }
+
+            let tmp = array.length-1
+            while(tmp >= 0){
+                if(array[tmp].value){ array[tmp].str = (array[tmp].str||'') + letter; break }
+                tmp--
             }
         }else{
             if(symbolsArray.includes(letter)){
                 array.push({
                     value: letter,
                     type: 'symbol',
+                    str: letter
                 })
                 array.push({})
             }else if(letter.match(/\s/)){
+                let tmp = array.length-1
+                while(tmp >= 0){
+                    if(array[tmp].value){ array[tmp].str = (array[tmp].str||'') + letter; break }
+                    tmp--
+                }
                 array.push({})
+            }else if(letter === ('\n')){
+                last.str = (last.str||'') + letter
             }
             else{
                 last.value = (last.value||'')+letter;
+                
+                let tmp = array.length-1
+                while(tmp >= 0){
+                    if(array[tmp].value){ array[tmp].str = (array[tmp].str||'') + letter; break }
+                    tmp--
+                }
                 last.type = 'word'
             }
         }
@@ -59,7 +79,8 @@ const parseTemp = (temp, findVars=true) => {
             return array[i].value.trim()
         }
     })
-    return array.filter((w) => Object.keys(w).length && w && w.value )
+    return array
+        .filter((w) => Object.keys(w).length && w && w.value )
 }
 
 exports.parseTemp = (str) => parseTemp(str, true)

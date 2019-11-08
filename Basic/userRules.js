@@ -1,6 +1,25 @@
 // user created rules
 
+// config: {
+//   template: {
+//      nope -> keepSpace: false, 
+//   }
+//   words: [
+//      {
+//          word: 'word', 
+//          enum: (['value', ..] || () => values ), avvv: 1 CHECKKK
+//          required: false, avvv: 1
+//          default: 'def', var avvv: 1
+//          select: alphaNum || jsExpression  avvv: 9
+//      }
+//   ]
+// }
+
+
 let stringify = obj => {
+    if(!Object.keys(obj).length){
+        return '{}'
+    }
     let str = '{'
     for (let prop in obj){
         str += prop + ':' + obj[prop] + ','
@@ -21,20 +40,27 @@ exports.rules = [
             if(n1>=0 || isNaN(n1)){
                 return `${array}[${n1}]`
             }
-            return `${array}[${array}.length ${n1}]`
+            return `${array}[${array}.length${n1}]`
         }
     }
     ,{
-        id: 'minusArrowFunction',
+        id: 'thinArrowFunction',
         template: '({args}) -> {{code}}',
         output: function({args, code}){
+            if(! (args && code)) {return false}
             return `(${args}) => ${code}`
         }
-    },{
+    }
+    ,{
         id: 'letToVar',
-        template: 'let {var} = {value}',
+        template: 'let {variable} = {value}',
+        config: {
+            words: [
+                {word: 'let', enum: ['let', 'var', 'const']}
+            ]
+        },
         output: function(o){
-            return `var ${o.var} = ${o.value}`
+            return `var ${o.variable} = ${o.value}`
         }
     },{
         id: 'multiLevelIndex',
@@ -67,11 +93,14 @@ exports.rules = [
         id: 'namedArgumentsDeclare',
         template: 'func({args}){code}',
         output: function(o){
+            if(!(o.args && o.code)){
+                return false
+            }
             let args = o.args.split(',')
             let defs = {}
             args.map( (arg, i) => {
                 if(arg.includes('=')){
-                    defs[arg.split('=')[0]] = arg.split('=')[1]
+                    defs[arg.split('=')[0].trim()] = eval(arg.split('=')[1])
                 }else{
                     defs[arg] = null
                 }
@@ -84,26 +113,30 @@ exports.rules = [
             }
 return `function(args) {
     var defaults = ${JSON.stringify(defs)}
-    var keys = ${JSON.stringify(Object.keys(defs))}
-    Object.assign( defaults, args )
-    for( var i=0; i<keys.length; i++ ) {
-        var prop = keys[i]
-        this[prop] = defaults[prop] || defaults[i]
+    var keys = Object.keys(defaults)
+	for(let prop in args){
+		if(isNaN(prop)){ defaults[prop] = args[prop]}
+		else{defaults[keys[prop]] = args[prop]}
     }
-    ${o.code}
-}`
+    for( var i=0; i<keys.length; i++ ) {
+        this[keys[i]] = defaults[keys[i]]
+    }
+    ${o.code}`
         }
     }, {
         id: 'namedArgumentsCall',
         template: '{func}({args})',
         output: function(o){
-            if(! (o && o.args && o.func) ){return false}
-            let args = o.args.split(',')
+            if(! (o && o.func) ){
+                return false}
+            let args = o.args || ''
+            args = args ? args.split(',') : []
+            // console.log(args)
+
             let defs = {}
             if(!/^[a-zA-Z]*$/.exec(o.func)){
                 return false
             }
-            console.log(o.func)
             args.map( (arg, i) => {
                 if(arg.includes('=')){
                     defs[arg.split('=')[0]] = arg.split('=')[1]
@@ -111,7 +144,8 @@ return `function(args) {
                     defs[i] = arg
                 }
             })
-            return `${o.func}(${stringify(defs)})`
+            let argsStr = Object.keys(defs).length ? stringify(defs) : ''
+            return `${o.func}(${argsStr})`
         }
     }, 
     {
@@ -149,7 +183,6 @@ return `function(args) {
             }
             var split = splitByAny(o.expression, '+-/*'.split(''))
             let value = ''
-            console.log(split)
             split.forEach( (el, i) => {
                 if(i%2){ // opertaion + /
                     let operator = el

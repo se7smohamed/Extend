@@ -5,6 +5,7 @@
   "main": "basic/compile.js",
   "scripts": {
     "start": "node basic/compile.js",
+    "dev": "nodemon basic/compile.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
