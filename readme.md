@@ -1,4 +1,4 @@
-# Extended.js
+# Extend.js
 
 ## How it works
 
@@ -26,4 +26,4 @@ The return of this function is what the compiler is going write to your code. if
 
 One last thing you need to know is the escape character which is the `#` sign.
 
-Feel free to try it on http://extended.netlify.com/
+Feel free to try it on http://extend.netlify.com/
