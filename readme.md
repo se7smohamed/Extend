@@ -1,5 +1,6 @@
 # Extend.js
 
+*Cli tool is on tool is on the way..*
 ## How it works
 
 Each rule consists of two parts: `template` and `output`.
