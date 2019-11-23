@@ -1,21 +1,31 @@
 {
-  "name": "extend",
-  "version": "1.0.0",
+  "name": "extendx",
+  "version": "0.0.4",
   "description": "",
   "main": "basic/compile.js",
+  "bin": {
+    "@squaredev/extendx": "extend",
+    "extendx": "extend"
+  },
   "scripts": {
     "start": "node basic/compile.js",
     "dev": "nodemon basic/compile.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "w": "nodemon basic/w.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "e": "cd basic && pkg w.js --targets win && move w.exe ../w.exe && cd .. && w.exe",
+    "z": "npm link && extend"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/se7smohamed/Extend.git"
   },
   "author": "Hassan",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/se7smohamed/Extend/issues"
   },
-  "homepage": "https://github.com/se7smohamed/Extend#readme"
+  "homepage": "https://github.com/se7smohamed/Extend#readme",
+  "dependencies": {
+    "chokidar": "^3.3.0",
+    "fs-extra": "^8.1.0"
+  }
 }

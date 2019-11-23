@@ -11,24 +11,29 @@
 const fs = require('fs')
 const parse = require('./parse')
 const path = require('path')
-let userRules = require('./userRules').rules
-userRules = parse.handleRules(userRules)
 
-var fileName = '' 
-var buildName = '' 
+var fileName = ''
+var buildName = ''
+var rulesFile = ''
+var rulesFileName = '_rules.js'
 
-
+// console.log(process.cwd())
+// console.log(__filename)
+// console.log(__dirname)
+// process.exit()
 var args = process.argv.slice(2)
 switch(args.length){
     case 0:
-        fileName = path.join(__dirname,'../', 'example', 'source.js.xs')
-        buildName = fileName.split('.').slice(0, -1).join('.')
+        fileName = path.join(__dirname,'../', 'example', 'source.xt')
+        rulesFile = path.join(__dirname,'../', 'example', '_rules.js')
+        buildName = fileName.split('.').slice(0, -1).join('.') + '.js'
         break
     case 1:
         fileName = args[0]
         var list = fileName.split('.')
-        buildName = list.slice(0,-1).join('.')
-        if(list[list.length-1]!=='xs'){
+        buildName = list.slice(0,-1).join('.') + '.js'
+        rulesFileName = path.join( path.dirname(fileName), rulesFileName)
+        if(list[list.length-1]!=='xt'){
             buildName += '.comp.' + list[list.length-1]
         }
         break
@@ -38,6 +43,29 @@ switch(args.length){
         break
 }
 
+let tempForTesting = false
+
+if(tempForTesting){
+    console.log('xxx', rulesFileName)
+    rulesFileName = rulesFileName.split('\\').slice(0, -3).join('\\')
+    console.log('xxx', rulesFileName)
+
+}
+
+// let userRules = eval(fs.readFileSync(rulesFileName).toString())
+// console.log(__dirname, 'x', rulesFileName)
+// console.log(process.argv)
+
+let userRules = require( 
+    path.join(process.cwd(), rulesFileName)
+).rules
+// console.log(fileName, buildName)
+// console.log(':',userRules)
+// process.exit()
+
+userRules = parse.handleRules(userRules)
+
+
 try{
     var sourceCode = fs.readFileSync(fileName).toString()
 }catch(e){
@@ -46,7 +74,7 @@ try{
 }
 
 
-var debugging = 1
+var debugging = 0
 const writeToFile = (processed, fileName) => {
     fs.writeFile(fileName, processed, (err) => {
         console.log('Success.');
@@ -60,6 +88,5 @@ const compile = () => {
         writeToFile(value, buildName)
     }
 }
-
 
 compile()

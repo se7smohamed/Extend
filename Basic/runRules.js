@@ -74,9 +74,9 @@ const parseTemp = (temp, findVars=true) => {
         }
 
     }
-    array.forEach((w, i) => {
-        if(array[i].value){
-            return array[i].value.trim()
+    array.forEach((word) => {
+        if(word.value){
+            return word.value.trim()
         }
     })
     return array
