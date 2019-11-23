@@ -9,15 +9,17 @@ npm install -g extendx
 ```
 
 ## Usage
-To use Extend in your next project you have to run the command extendx in project root directory.
+To use Extend in your next project you have to run the command `extendx` in your project root directory.
 
 The first thing that you are going to need is the `_rules.js` file inside your `src` folder,
-this is where your *rules* are going to live and is a normal javascript with one array exported that is `rules`, more about rules in a second.
+this is where your *rules* are going to live and is just a normal javascript with one array exported that is `rules`, more about that in a second.
 
 The compiler will then look for code inside your `src` folder, only files with extension `.xt` will be processed,
-since this is a very early stage, we are going to use the mustache syntax to highlight the parts that will require comiling. eg &nbsp; `var element = {{ My  <-- New @ AmAzIng --> Syntax }}`
+since this is a very early stage, we are going to use the mustache syntax to highlight the parts that will require comiling.
 
-Once done, the compiler will write the processed version of your code inside `dist` folder.
+eg &nbsp; `var element = {{ My  <-- New @ AmAzIng --> Syntax }}`
+
+Once done, the compiler will write the processed version of your code to `dist` folder.
 
 
 
