@@ -1,6 +1,6 @@
 {
   "name": "extendx",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "",
   "main": "basic/compile.js",
   "bin": {
@@ -26,6 +26,7 @@
   "homepage": "https://github.com/se7smohamed/Extend#readme",
   "dependencies": {
     "chokidar": "^3.3.0",
+    "command-line-args": "^5.1.1",
     "fs-extra": "^8.1.0"
   }
 }
