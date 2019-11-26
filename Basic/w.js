@@ -9,11 +9,10 @@ var example = require('./example')
 
 var watcher = chokidar.watch('file or dir', {ignored: /^\./, persistent: true});
 var folders = ['src', 'dist']
-var args = process.argv.slice(2)
+var extentions = [['xt'], ['xt', 'js']]
 var fileName = path.join(process.cwd(), folders[0])
 var rulesShort = '_rules.js'
 var rulesFileName = path.join(process.cwd(), folders[0], rulesShort)
-var debugging = 0
 
 var optionDefinitions = [
     { name: 'help', alias: 'h', type: Boolean },
@@ -21,17 +20,17 @@ var optionDefinitions = [
 ]
 
 try{
-    var cmdOptions = commandLineArgs(optionDefinitions)
+    var cliOptions = commandLineArgs(optionDefinitions)
 }catch(error){
     console.log('Unknown argument', error.optionName)
     console.log('Use -h for to show instructions.')
     process.exit()
 }
 
-if(cmdOptions.help){
+if( cliOptions.help ){
     console.log(`use --example or -e to create a basic example, \nPlease refer to https://github.com/se7smohamed/Extend for further help.`)
     process.exit()
-}else if(cmdOptions.example){
+}else if( cliOptions.example ){
     console.log('Creating a Hello World example.')
     example.text.forEach( file => {
         fse.outputFileSync(file.file, file.text)
@@ -41,9 +40,14 @@ if(cmdOptions.help){
 
 
 var getUserRules = () => {
-    userRules = require( path.join(rulesFileName) ).rules
-    userRules = parse.handleRules(userRules)
-    return userRules
+    try{
+        userRules = require( path.join(rulesFileName) ).rules
+        userRules = parse.handleRules(userRules)
+        return userRules
+    }catch(MODULE_NOT_FOUND){
+        console.log('_rules.js not found')
+        return []
+    }
 }
 
 
@@ -53,8 +57,11 @@ var writeToFile = (processed, fileName) => {
 
 var compile = (fileName) => {
     var shoudCompile = (name) => {
+        var nameList = name.split('.')
         if( path.basename(name) === rulesShort ){ return rulesShort }
-        if( path.extname(name) === '.xt' ){ return 'compile' }
+        if( nameList.slice(-1).join() === extentions[0].join() ){ return 'compile1' }
+        if( nameList.slice(-2).join() === extentions[1].join() ){ return 'compile2' }
+        console.log( extentions, 'xxxx', nameList.slice(-1), nameList.slice(-2))
         return 'pass'
     }
     var getPathAfterSrc = (fileName) => {
@@ -63,7 +70,6 @@ var compile = (fileName) => {
         var outPath = path.join(folders[1], relativePath)
         return outPath
     }
-    var baseName = path.basename(fileName)
     var writeName = getPathAfterSrc(fileName)
     var doCompile = shoudCompile(fileName)
     if(doCompile === rulesShort ){ 
@@ -85,12 +91,9 @@ var compile = (fileName) => {
     }
 
     var value = parse.extracteur(sourceCode, ['{{', '}}'], userRules).text
-    if(debugging){
-        console.log( value )
-    }else{
-        writeName = writeName.replace( path.extname(writeName), '.js' )
-        writeToFile(value, writeName)
-    }
+    if(doCompile==='compile2'){ writeName = writeName.replace('.xt', '') }
+    writeName = writeName.replace( path.extname(writeName), '.js' )
+    writeToFile(value, writeName)
 }
 
 function unlink(fileName){

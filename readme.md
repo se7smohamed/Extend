@@ -25,7 +25,7 @@ this is where your *rules* live and is just a normal javascript with one array e
 The compiler will then look for code inside your `src` folder, only files with extension `.xt` will be processed.
 since this is a very early stage, we are going to use the mustache syntax to highlight the parts that will require comiling.
 
-eg: &nbsp; `var element = {{ My  <-- New @ AmAzIng --> Syntax }}`
+eg:&nbsp; `var element = {{ My  <-- New @ AmAzIng --> Syntax }}`
 
 Once done, the compiler will write the processed version of your code to `dist` folder.
 
