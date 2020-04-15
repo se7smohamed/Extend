@@ -1,7 +1,7 @@
 const path = require('path')
 exports.text = [
     {
-        file: path.join('./src', '_rules.js'),
+        file: '_extend.js',
         text:
 `
 let stringify = obj => {
@@ -16,13 +16,13 @@ let stringify = obj => {
 module.exports.rules = [
     {
         id: 'arrayComprehension',
-        template: '[ {{el}} for {{elName}} in {{array}} ]',
+        template: '#[ {{el}} for {{elName}} in {{array}} #]',
         output: function({array, el, elName}){
             return \`\${array}.map( \${elName}=> \${el})\`
         }
     }, {
         id: 'pyArrayNegative',
-        template: '{{array}} [ {{n1}} ]',
+        template: '{{array}} #[ {{n1}} #]',
         output: function({array, n1}){
             // conflicting with another rule
             if(n1.includes(',')){
@@ -35,7 +35,7 @@ module.exports.rules = [
         }
     },{
         id: 'multiLevelIndex',
-        template: '{array}[{indexes}]',
+        template: '{array}#[{indexes}#]',
         output: function({array, indexes}){
             try{
                 indexes = '[' + indexes + ']'

@@ -53,7 +53,7 @@ if (cliOptions.help) {
     `use --example or -e to create a basic example, \nPlease refer to https://github.com/se7smohamed/Extend for further help.`
   );
   process.exit();
-} else if (cliOptions.example) {
+} else if (cliOptions.start) {
   console.log("Creating a Hello World example.");
   example.text.forEach(file => {
     fse.outputFileSync(file.file, file.text);
