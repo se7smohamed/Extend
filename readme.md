@@ -64,4 +64,5 @@ Feel free to try it live on http://extend.netlify.com/
 
 ### 0.1.0
 Added array support.
+
 Added rules settings.

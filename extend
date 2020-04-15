@@ -1,2 +1,2 @@
 #!/usr/bin/env node
-require('./basic/w.js');
+require('./basic/watch.js');
