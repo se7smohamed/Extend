@@ -1,4 +1,7 @@
 *.no.*
-*.no
+no.*
 node_modules
 .vscode
+re.js
+src
+dist

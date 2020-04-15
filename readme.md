@@ -15,9 +15,9 @@ Please note we are going to use the name extend*x* for the cli for now.
 To create your first project using Extend please run the command 
 
 ```
-extendx --example
+extendx --start
 ```
-which is going to create a very basic project to start with.
+which is going to create a very basic project for you to start with.
 
 The first thing that you are going to need is the `_rules.js` file inside your `src` folder,
 this is where your *rules* live and is just a normal javascript with one array exported that is `rules`, more about that in a second.
@@ -25,7 +25,7 @@ this is where your *rules* live and is just a normal javascript with one array e
 The compiler will then look for code inside your `src` folder, only files with extension `.xt` will be processed.
 since this is a very early stage, we are going to use the mustache syntax to highlight the parts that will require comiling.
 
-eg:&nbsp; `var element = {{ My  <-- New @ AmAzIng --> Syntax }}`
+eg:&nbsp; `var salary = {{ employee.salary for employee in employees }}`
 
 Once done, the compiler will write the processed version of your code to `dist` folder.
 
@@ -58,3 +58,10 @@ The return of this function is what the compiler is going write to your code. if
 One last thing you need to know is the escape character which is the `#` sign.
 
 Feel free to try it live on http://extend.netlify.com/
+
+
+## What's new
+
+### 0.1.0
+Added array support.
+Added rules settings.

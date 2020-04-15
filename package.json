@@ -2,17 +2,17 @@
   "name": "extendx",
   "version": "0.0.6",
   "description": "",
-  "main": "basic/compile.js",
+  "main": "basic/watch.js",
   "bin": {
     "@squaredev/extendx": "extend",
     "extendx": "extend"
   },
   "scripts": {
-    "start": "node basic/compile.js",
-    "dev": "nodemon basic/compile.js",
-    "w": "nodemon basic/w.js",
+    "start": "node basic/watch.js",
+    "dev": "nodemon basic/watch.js",
+    "w": "node basic/watch.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "e": "cd basic && pkg w.js --targets win && move w.exe ../w.exe && cd .. && w.exe",
+    "e": "cd basic && pkg watch.js --targets win && move w.exe ../w.exe && cd .. && w.exe",
     "z": "npm link && extend"
   },
   "repository": {
