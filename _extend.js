@@ -38,7 +38,7 @@ module.exports.types = {
   any: v => true,
   // matches nothing (useless)
   none: v => false,
-  // turn any variable into AAAAA (also useless)
+  // turns all variables into AAAAA (also useless)
   AAAAA: v => 'AAAAA',
   // 'and' + 'or' functions are both included in the starting project
   startsWithAorB: or(startsWithA, startsWithB)
