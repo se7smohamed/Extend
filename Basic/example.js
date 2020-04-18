@@ -4,201 +4,126 @@ exports.text = [
         file: '_extend.js',
         text:
 `
-let stringify = obj => {
-    let str = '{'
-    for (let prop in obj){
-        str += prop + ':' + obj[prop] + ','
-    }
-    str = str.slice(0, -1) + '}'
-    return str
+module.exports.settings = {
+  srcFolder: 'src',
+  distFolder: 'dist',
+  codeOpening: '/**',
+  codeClosing: '**/',
+  variableOpening: '{',
+  variableClosing: '}',
+  arrayOpening: '[',
+  arrayClosing: ']',
+  escapeCharacter: '#',
 }
-    
-module.exports.rules = [
-    {
-        id: 'arrayComprehension',
-        template: '#[ {{el}} for {{elName}} in {{array}} #]',
-        output: function({array, el, elName}){
-            return \`\${array}.map( \${elName}=> \${el})\`
-        }
-    }, {
-        id: 'pyArrayNegative',
-        template: '{{array}} #[ {{n1}} #]',
-        output: function({array, n1}){
-            // conflicting with another rule
-            if(n1.includes(',')){
-                return false
-            }
-            if(n1>=0 || isNaN(n1)){
-                return \`\${array}[\${n1}]\`
-            }
-            return \`\${array}[\${array}.length\${n1}]\`
-        }
-    },{
-        id: 'multiLevelIndex',
-        template: '{array}#[{indexes}#]',
-        output: function({array, indexes}){
-            try{
-                indexes = '[' + indexes + ']'
-                indexes = JSON.parse(indexes)
-            }catch(e){ 
-                return false 
-            }
-            let code = \`\${array}[\`
-            for(index of indexes){
-                if(index < 0){
-                    code += code.slice(0, -1) + '.length-' + Math.abs(index) + ']['
-                }else{
-                    code += index + ']['
-                }
-            }
-            code = code.slice(0, -1)
-            return code
-        }
-    }, {
-        id: 'forMax',
-        template: '{i} to {max}: {code}',
-        output: function(o){
-            return \`for (let \${o.i} = 0; \${o.i} < \${o.max}; \${o.i}++) \${o.code}\`
-        }
-    }, {
-        id: 'namedArgumentsDeclare',
-        template: 'func({args}){code}',
-        output: function(o){
-            if(!(o.args && o.code)){
-                return false
-            }
-            let args = o.args.split(',')
-            let defs = {}
-            args.map( (arg, i) => {
-                if(arg.includes('=')){
-                    defs[arg.split('=')[0].trim()] = eval(arg.split('=')[1])
-                }else{
-                    defs[arg] = null
-                }
-            })
-            if( o.code[0]==='{'){
-                o.code = o.code.slice(1)
-            }
-            if( o.code[o.code.length-1]==='}' ){
-                o.code = o.code.slice(0, -1)
-            }
-return \`function(args) {
-    var values = \${JSON.stringify(defs)}
-    var keys = Object.keys(values)
-	for(let prop in args){
-		if(isNaN(prop)){ values[prop] = args[prop]}
-		else{values[keys[prop]] = args[prop]}
-    }
-    for( var i=0; i<keys.length; i++ ) {
-        this[keys[i]] = values[keys[i]]
-    }
-    \${o.code}\`
-        }
-    }, {
-        id: 'namedArgumentsCall',
-        template: '{func}({args})',
-        output: function(o){
-            if(! (o && o.func) ){
-                return false}
-            let args = o.args || ''
-            args = args ? args.split(',') : []
-            // console.log(args)
 
-            let defs = {}
-            if(!/^[a-zA-Z]*$/.exec(o.func)){
-                return false
-            }
-            args.map( (arg, i) => {
-                if(arg.includes('=')){
-                    defs[arg.split('=')[0]] = arg.split('=')[1]
-                }else{
-                    defs[i] = arg
-                }
-            })
-            let argsStr = Object.keys(defs).length ? stringify(defs) : ''
-            return \`\${o.func}(\${argsStr})\`
-        }
-    }, 
-    {
-        id: 'operatorOverLoading',
-        template: '{expression}',
-        output: function(o){
-            var hasAny = (str, needles) => {
-                return needles.filter(needle => str.includes(needle));
-            }
-            var splitByAny = (str, needles) => {
-                let array = ['']
-                str.split('').forEach((char, i) => {
-                    if(needles.includes(char)){
-                        if(array[array.length-1]){
-                            return array.push(char, '')
-                        }
-                        return array[array.length-1] += char
-                    }
-                    return array[array.length-1] += char
-                });
-                return array
-            }
-            var has = []
-            if( (o && o.expression) ){
-                has = hasAny(o.expression, '+-/*'.split(''))
-                if(!has.length) {return false}
-            }else{
-                return false
-            }
-            let operObject = {
-                '+': '_add_',
-                '-': '_sub_',
-                '*': '_mul_',
-                '/': '_div_'
-            }
-            var split = splitByAny(o.expression, '+-/*'.split(''))
-            let value = ''
-            split.forEach( (el, i) => {
-                if(i%2){ // opertaion + /
-                    let operator = el
-                    let operation = operObject[operator]
-                    let b4 = split[i-1]
-                    let after = split[i+1]
-                    if(i===1){ value += \`\${b4}.\${operation}(\` }
-                    if(split.length===3){ return value += \`\${after})\`}
-                    if(i===1 && split.length !== 3){ return }
-                    if(i===split.length-2){ return value += \`\${b4}).\${operation}(\${after})\` }
-                    return value += \`\${b4}).\${operation}(\${after}\`
-                }
-            })
-            return value
-        }
+const process = (filter, variable) => {
+  if(filter instanceof RegExp)
+    return variable.match(fitler)
+  else if (filter instanceof Function)
+    return filter(variable)
+}
+
+
+const and = (...filters) => 
+  variable => filters.every( filter => process(filter, variable) )
+
+const or = (...filters) => 
+  variable => filters.some( filter => process(filter, variable) )
+
+
+const startsWithA = variable => variable[0].toLowerCase() === 'a'
+const startsWithB = variable => variable[0].toLowerCase() === 'b'
+const experimental = (variable, vars, name) => {
+  vars.xxx = 'xxx'
+  return variable.slice(0, -3)
+}
+module.exports.types = {
+  int: /^\d+$/,
+  float: /^\d+\.\d+$/,
+  // matches any thing (useless)
+  any: v => true,
+  // matches nothing (useless)
+  none: v => false,
+  // turn any variable into AAAAA (also useless)
+  AAAAA: v => 'AAAAA',
+  // 'and' + 'or' functions are both included in the starting project
+  startsWithAorB: or(startsWithA, startsWithB)
+}
+
+module.exports.rules = [
+  {
+    id: 'if cnd',
+    template: 'if {cnd}#{{code}#}',
+    output: ({ cnd, code }) => \`if (\${cnd}) {
+      \${code}
+    }\`
+    },
+  {
+    id: 'negative index',
+    template: '{array} #[{i}#]',
+    output: ({ array, i }) => {
+      i = i.trim()
+      if (i.includes(':')) return false
+      if (i[0] === '-') return \`\${array}[\${array}.length\${i}]\`
+      return \`\${array}[\${i}]\`
     }
+  },
+  {
+    id: 'py slice',
+    template: '{array} #[{start}:{end}#]',
+    output: ({ array, start, end }) => {
+      return \`\${array}.slice(\${start}, \${end})\`
+    }
+  },
+  {
+    id: 'arrayComprehension',
+    template: '#[ {el} for {elName} in {array} #]',
+    output: function ({ array, el, elName }) {
+      return \`\${array}.map( \${elName}=> \${el})\`
+    }
+  },
+  {
+    id: 'for',
+    template: 'for {i}:{max}#{{code}#}',
+    output: ({i,max,code}) => \`for(let \${i}=0; \${i}<\${max}; \${i}++){
+      \${code}
+    }\`
+  },
+  {
+    template: \`<{elementName} {attributesArray}["{attr}"="{value}"] />\`,
+    output: b => 'eldata='+JSON.stringify(b)
+  }
 ]
 `
     }, {
-        file: path.join('./src', 'HelloWord.xt'),
+        file: path.join('./src', 'HelloWorld.xt.js'),
         text:
-`// A normal class declaration
-class D2Vector{ 
-    constructor(x, y){this.x = x; this.y = y; }
-    // Add method that is going to be used later
-    _add_(vector){ return new D2Vector( this.x + vector.x, this.y + vector.y ) }
-}
+`
+let employees = [
+  {name: 'emp0', salary: 1000},
+  {name: 'emp1', salary: 1320},
+  {name: 'emp2', salary: 1500},
+  {name: 'emp3', salary: 1100},
+  {name: 'emp4', salary: 2000},
+]
 
-var v1 = new D2Vector(2, 1);
-var v2 = new D2Vector(3, 7);
-var v3 = new D2Vector(30, 10);
+let salaries = /** 
 
-var v4 = {{v1+v2+v3}}
-console.log(v4)
+[employee.salary for employee in employees]
 
-// Python style array comprehension
-newArray = {{ [element.x for element in someArray] }}
+**/
 
-// Function declaration with named arguments
-var myFunction = {{ func xyz( x=1, y=2, z=3 ){
-    return [x, y, z]
-}}}
+console.log(salaries)
 
-// Calling myFunction with named arguments
-{{ myFunction(5, y=6) }}
+
+/** if true { 
+  console.log('I don\'t need parentheses')
+}**/
+
+/** for i:20 { 
+  console.log(\`i is: \${i#}\`)
+}**/
+
 `
     }
 ]

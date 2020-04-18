@@ -1,41 +1,57 @@
-
-// {{ array[ -2 ] }}
-
-// {{ array [0:23] }}
-
-// {{ array[ 2 ] }}
-
-
-// let employees = [
-//     {name: x, salary: 1000},
-//     {name: x, salary: 1000},
-//     {name: x, salary: 1000},
-//     {name: x, salary: 1000},
-// ]
-
-// let salaries = {{ [ employee.salary for employee in array] }}
-
 module.exports.settings = {
   srcFolder: 'src',
   distFolder: 'dist',
   codeOpening: '/**',
   codeClosing: '**/',
-  variableOpening: '}',
+  variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
   arrayClosing: ']',
   escapeCharacter: '#',
 }
 
+const process = (filter, variable) => {
+  if(filter instanceof RegExp)
+    return variable.match(fitler)
+  else if (filter instanceof Function)
+    return filter(variable)
+}
+
+
+const and = (...filters) => 
+  variable => filters.every( filter => process(filter, variable) )
+
+const or = (...filters) => 
+  variable => filters.some( filter => process(filter, variable) )
+
+
+const startsWithA = variable => variable[0].toLowerCase() === 'a'
+const startsWithB = variable => variable[0].toLowerCase() === 'b'
+const experimental = (variable, vars, name) => {
+  vars.xxx = 'xxx'
+  return variable.slice(0, -3)
+}
+module.exports.types = {
+  int: /^\d+$/,
+  float: /^\d+\.\d+$/,
+  // matches any thing (useless)
+  any: v => true,
+  // matches nothing (useless)
+  none: v => false,
+  // turn any variable into AAAAA (also useless)
+  AAAAA: v => 'AAAAA',
+  // 'and' + 'or' functions are both included in the starting project
+  startsWithAorB: or(startsWithA, startsWithB)
+}
+
 module.exports.rules = [
   {
     id: 'if cnd',
     template: 'if {cnd}#{{code}#}',
-    output: ({ cnd, code }) => `
-      (${cnd}){
-        ${code}
-      }`
-  },
+    output: ({ cnd, code }) => `if (${cnd}) {
+      ${code}
+    }`
+    },
   {
     id: 'negative index',
     template: '{array} #[{i}#]',
@@ -48,11 +64,9 @@ module.exports.rules = [
   },
   {
     id: 'py slice',
-    template: '{array} #[{s}:{e}#]',
-    output: ({ array, s, e }) => {
-      if (!e) e = array + '.length-1'
-      if (!s) s = 0
-      return `${array}.slice(${s}, ${e})`
+    template: '{array} #[{start}:{end}#]',
+    output: ({ array, start, end }) => {
+      return `${array}.slice(${start}, ${end})`
     }
   },
   {
@@ -62,86 +76,15 @@ module.exports.rules = [
       return `${array}.map( ${elName}=> ${el})`
     }
   },
+  {
+    id: 'for',
+    template: 'for {i}:{max}#{{code}#}',
+    output: ({i,max,code}) => `for(let ${i}=0; ${i}<${max}; ${i}++){
+      ${code}
+    }`
+  },
+  {
+    template: `<{elementName} {attributesArray}["{attr}"="{value}"] />`,
+    output: b => 'eldata='+JSON.stringify(b)
+  }
 ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// module.exports.rules = [
-//     {
-//         id: 'test',
-//         template: 'w1 {yoMyArray}[{var1}=({val1})] w2',
-//         output: (o) => JSON.stringify(o) + '\n//rule1'
-
-//     },
-//     {
-//         id: 'tesxt',
-//         template: '<{element} {attrs}["{key}"="{value}"]>',
-//         output: ({element, attrs}) => `${element}.attributes = ${JSON.stringify(attrs)}`
-//     },
-
-//     {
-//         id: 'for',
-//         template: 'for {i}:{max}#{{code}#}',
-//         output: ({i,max,code}) => `
-// for(let ${i}=0; ${i}<${max}; ${i}++){
-//     ${code}
-// }
-// `
-//     },
-//     {
-//         id: 'if cnd',
-//         template: 'if {cnd}#{{code}#}',
-//         output: ({cnd,code}) => `if(${cnd}){
-//     ${code}
-// }`
-//     },
-
-// ]
-
-
-
-
-// a = {{
-//   w1 [somevar1=(someval1) somevar2=(someval2)] w2
-// }}
-
-
-// {{
-//   <div "color"="red" "id"="main" "key3"="val3">
-// }}
-
-
-// {{
-//   for j:10{
-//       alert(j)
-//   }
-// }}
-
-
-// {{
-//   if true {
-//       console.log('.1+.2 !== .3')
-//   }
-// }}

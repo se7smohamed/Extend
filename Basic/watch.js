@@ -1,9 +1,11 @@
+// next up better var detection
+// handle deleted files
+
 var commandLineArgs = require("command-line-args");
 var fs = require("fs");
 var fse = require("fs-extra");
 var path = require("path");
 var chokidar = require("chokidar");
-var compileModule = require("./compile");
 var example = require("./example");
 
 let badDirectories = ['git', 'node_modules']
@@ -11,14 +13,19 @@ var watcher = chokidar.watch("file or dir", {
   ignored: /node\_modules|\.git/,
   persistent: true
 });
-var folders = ["src", "dist"];
+var folders // = ["src", "dist"];
 var extentions = [["xt"], ["xt", "js"]];
 var defaultRulesFileName = "_extend.js";
 var rulesFileName = "_extend.js";
-var currentDirectory = process.cwd()
-var srcDirectory = path.join(currentDirectory, folders[0]);
-var distDirectory = path.join(currentDirectory, folders[0]);
-var rulesfullName = path.join(currentDirectory, folders[0], rulesFileName);
+// var currentDirectory = process.cwd()
+// var srcDirectory = path.join(currentDirectory, folders[0]);
+// var rulesfullName = path.join(currentDirectory, folders[0], rulesFileName);
+
+
+global.msg = (...msgs) => {
+  let time = new Date().toLocaleString().split(' ')[1]
+  console.log(`${time}|`,...msgs)
+}
 
 var optionDefinitions = [
   { name: "help", alias: "h", type: Boolean },
@@ -26,7 +33,7 @@ var optionDefinitions = [
   { name: "other", defaultOption: true, type: String }
 ];
 
-var defualtSettings = {
+var defaultSettings = {
   srcFolder: 'src',
   distFolder: 'dist',
   codeOpening: '{{',
@@ -37,20 +44,22 @@ var defualtSettings = {
   arrayClosing: ']',
   escapeCharacter: '#',
 }
-var settings = defualtSettings
+var settings = defaultSettings
+global.settings = settings
 
-var userSettings = defualtSettings
+var userSettings = defaultSettings
+var compileModule = require("./compile");
 try {
   var cliOptions = commandLineArgs(optionDefinitions);
 } catch (error) {
   console.log("Unknown argument", error.optionName);
-  console.log("Use -h for to show instructions.");
+  console.log("Use -h for instructions.");
   process.exit();
 }
 
 if (cliOptions.help) {
   console.log(
-    `use --example or -e to create a basic example, \nPlease refer to https://github.com/se7smohamed/Extend for further help.`
+    `use --start or -s to create a basic example, \nPlease refer to https://github.com/se7smohamed/Extend for further help.`
   );
   process.exit();
 } else if (cliOptions.start) {
@@ -64,25 +73,42 @@ getSettingsFile = fileName => {
   try {
     Object.keys(require.cache).forEach(function (key) { delete require.cache[key] })
     userRules = require(path.join(fileName));
+    global.settingsFile = userRules
+    global.settings = userRules.settings || {}
     return userRules;
   } catch (MODULE_NOT_FOUND) {
-    console.log("extend.js not found", fileName);
-    return [];
+    console.log("rules file not found please create file.", fileName);
+    process.exit()
   }
 }
 var getUserRules = (fileName) => {
   var userRules = getSettingsFile(fileName)
+  // todo again.. no idea, sometimes it would fail when opening file, need to change how i reload module.
+  let maxAttempets = 15
+  for (let i = 0; i < maxAttempets; i++) {
+    if(!Object.keys(userRules).length) {userRules = getSettingsFile(fileName)}
+    else break
+  }
   var rules = userRules.rules;
-  rules = compileModule.handleRules(rules);
+  rules = compileModule.handleRules(userRules);
   return rules;
 };
 
 var writeToFile = (processed, fileName) => {
+  if(!processed) return global.msg('Error, nothing to write.')
   fse.outputFileSync(fileName, processed);
+  global.msg('Success.')
 };
 
+var lastSaved = {}
 var localCompile = fileName => {
-  // console.log('yo file', fileName);
+  // this time difference thing is because of an issue with vscode when saving
+  let minTime = 200
+  let last = lastSaved[fileName]||0
+  let time = Date.now()
+  if(last && time-last < minTime ){ return }
+  lastSaved[fileName] = Date.now()
+
   let badFileReg = new RegExp(`${badDirectories.join('|')}`)
   if (fileName.match(badFileReg)) {
     return console.log('xxxxxx bad dir')
@@ -105,13 +131,10 @@ var localCompile = fileName => {
   var shouldCompile = shoudCompile(fileName);
   if (shouldCompile === 'rules') {
     userRules = getUserRules(rulesfullName);
-    console.log('updated user rules.')
-    watcher.unwatch(fileName);
-    watcher.add(fileName);
+    global.msg('Updated rules.')
     return 1;
   }
   if (!shouldCompile){
-    // console.log('==============================\n', writeName);
     return writeToFile(fs.readFileSync(fileName).toString(), writeName);
   }
   try {
@@ -123,12 +146,10 @@ var localCompile = fileName => {
     return 1;
   }
 
-  // console.log('tttttttt', userRules);
-  var value = compileModule.processCode(sourceCode, [settings.codeOpening, settings.codeClosing], userRules);
+  var value = compileModule.processCode(sourceCode, userRules, settings);
   if (shouldCompile === "xt.js") writeName = writeName.replace(".xt", "");
   writeName = writeName.replace(path.extname(writeName), ".js");
   writeToFile(value, writeName);
-  console.log('Success.')
 };
 
 function unlink(fileName) {
@@ -146,28 +167,31 @@ watcher
 
 
 const startWatching = () => {
-  console.log("Started..");
+  global.msg("Started..");
   rulesFileName = "_extend.js";
   
   var extentions = [["xt"], ["xt", "js"]];
   var currentDirectory = process.cwd()
+  
   rulesfullName = path.join(currentDirectory, rulesFileName);
-  srcDirectory = path.join(currentDirectory, folders[0]);
-  distDirectory = path.join(currentDirectory, folders[1]);
+
   userRules = getUserRules(rulesfullName);
 
   settingsFile = getSettingsFile(rulesfullName)
-  settings = {...defualtSettings, ...settingsFile.settings}
+  settings = {...defaultSettings, ...settingsFile.settings}
+  folders = [settings.srcFolder, settings.distFolder]
+
+  srcDirectory = path.join(currentDirectory, folders[0]);
   watcher.add(srcDirectory)
   watcher.add(path.join(process.cwd(), rulesFileName))
 }
 
 
 
-let strategy = 0
+let oldWay = false
 
-if (strategy === 1) {
-  console.log("Started...");
+if (oldWay) {
+  console.log("Started(old)...");
   var userRules = getUserRules(rulesfullName);
   watcher.add(srcDirectory);
 } else {
@@ -175,6 +199,8 @@ if (strategy === 1) {
 }
 
 
+
+// testing
 // setTimeout(() => {
 //   process.exit()
 // }, 100)

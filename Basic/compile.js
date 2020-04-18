@@ -17,6 +17,7 @@ if (settings.showNotMatched) unmatchedText = settings.unmatchedTextFunction
 
 const compileBlock = (sourceCode, codeMarkers, userRules) => {
   try {
+    // console.log('got block')
     let code = parse.parseCode(sourceCode);
     let rules = userRules;
     for (const ruleIndex in rules) {
@@ -39,9 +40,11 @@ const range = (start, end) => {
   for (let i = start; i < end; i++) array.push(i);
   return array;
 };
-exports.processCode = (sourceCode, codeMarkers, userRules, IS_ARRAY_CALL = false) => {
+exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false) => {
+  // IS_ARRAY_CALL && console.log(sourceCode)
   // extract and process code in place
   const find = (str, needle, i) => str.slice(i, i + needle.length) === needle;
+  codeMarkers = [global.settings.codeOpening, global.settings.codeClosing]
   const strChars = ['"', "'", "`"];
   var ingoreI = [];
   var isOpen = false;
@@ -56,12 +59,16 @@ exports.processCode = (sourceCode, codeMarkers, userRules, IS_ARRAY_CALL = false
     if (strChars.includes(letter)) {
       // found string character like ' " `
       // add text as is
-      if (!inStr.is) inStr.char = letter;
-      else if (inStr.is && inStr.char === letter) inStr.char = "";
+      if( ! (sourceCode[i-1] && sourceCode[i-1]==='\\') ){
+        // if not escaped
+        // todo fix this for only closing
+        if (!inStr.is) inStr.char = letter;
+        else if (inStr.is && inStr.char === letter) inStr.char = "";
 
-      inStr.is = !inStr.is;
-      outputText += letter;
-      continue;
+        inStr.is = !inStr.is;
+        outputText += letter;
+        continue;
+      }
     }
 
     // add to text to block
@@ -75,10 +82,9 @@ exports.processCode = (sourceCode, codeMarkers, userRules, IS_ARRAY_CALL = false
     if (foundOpenCode) {
       var res = this.processCode(
         sourceCode.slice(i + codeMarkers[0].length),
-        codeMarkers,
         userRules,
-        1
       );
+      // console.log(!!res, res.slice(0,6))
       if (res) {
         // add any text that was processed and add to ignored list to avoid reprocessing
         outputText += compileBlock(res, codeMarkers, userRules) || unmatchedText(res);
@@ -100,7 +106,12 @@ exports.processCode = (sourceCode, codeMarkers, userRules, IS_ARRAY_CALL = false
 };
 
 
-let handleRules = (userRules) => {
+let handleRules = (tesingFull) => {
+  let userRules = tesingFull.rules
+  if(!userRules || !Array.isArray(userRules) || !userRules.length){
+    console.log('An error has occured, cant get rules', userRules, tesingFull)
+    process.exit()
+  }
   for (const rule of userRules) {
     rule.parsed = parse.parseTemplate(rule.template);
     rule.enum = rule.parsed.map((word) => {
@@ -163,7 +174,7 @@ const getVariables = (rule, found, codeMarkers, wordAfterArray = 0, index = 'unk
       }
 
     if (tempRealIndex > 100000) {
-      console.log(`error: max iterations reached at code block ${index}. this may or may not be an issue ¯\\_(ツ)_/¯`)
+      // console.log(`error: max iterations reached at code block ${index}. this may or may not be an issue ¯\\_(ツ)_/¯`)
       break
     }
     var tempWord = template[tempIndex];
@@ -239,21 +250,10 @@ const getVariables = (rule, found, codeMarkers, wordAfterArray = 0, index = 'unk
   if (wordAfterArray) {
     for (var arrayIndex in arrayVars) {
       var block = arrayVars[arrayIndex]
-      for (var variable of tempVars) {
-        var extractedValue = block[variable.value];
-        if (!extractedValue) {
-          arrayVars.splice(arrayIndex, 1);
-        }
-      }
+      if(!listHasBlock(tempVars, block)) arrayVars.splice(arrayIndex, 1) 
     }
   } else {
-    for (var variable of tempVars) {
-      var extractedValue = vars[variable.value || variable.name];
-      if (!extractedValue || (Array.isArray(extractedValue) && !extractedValue.length)) {
-        settings.showNotFound && console.log(variable.value || variable.name, 'not found in', vars)
-        return false;
-      }
-    }
+    if(!listHasBlock(tempVars, vars)) return false;
   }
 
 
@@ -266,3 +266,40 @@ var addVariable = (foundWord, tempWord, object) => {
   object[tempWord.value] += foundWord.str || foundWord.value
 }
 exports.handleRules = handleRules;
+
+var listHasBlock = (list, block) => {
+  for (var variable of list) {
+    var extractedValue = block[variable.value || variable.name];
+    if (!extractedValue || (Array.isArray(extractedValue) && !extractedValue.length)) {
+      settings.showNotFound && console.log(variable.value || variable.name, 'not found in', block)
+      return false;
+    }
+    if(!variable.rest) continue
+    let type = variable.rest[0]
+    if(type){
+      extractedValue = extractedValue.trim()
+      let filter = global.settingsFile.types[type]
+      if(!filter){
+        console.log(`type "${variable.rest[0]}" didn't match any type`)
+        return false
+      }
+      if(filter instanceof RegExp) {
+        if(!extractedValue.match(filter)){
+          console.log(extractedValue, 'didn\'t match regex', filter)
+          return false
+        }
+      }else if(filter instanceof Function){
+        let returned = filter(extractedValue)
+        if(returned===false) {
+          console.log(extractedValue, 'didn\'t match type', type)
+          return false
+        }
+        block[variable.value || variable.name] = returned
+      }
+      // else{
+      //   console.log('filter', global.settingsFile.types)
+      // }
+    }
+  }
+  return true
+}
