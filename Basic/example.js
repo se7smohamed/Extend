@@ -117,7 +117,7 @@ console.log(salaries)
 
 
 /** if true { 
-  console.log('I don\'t need parentheses')
+  console.log('I don\\'t need parentheses')
 }**/
 
 /** for i:20 { 
