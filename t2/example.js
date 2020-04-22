@@ -1,8 +1,14 @@
+const path = require('path')
+exports.text = [
+    {
+        file: '_extend.js',
+        text:
+`
 module.exports.settings = {
-  srcFolder: 't1',
-  distFolder: 't2',
-  codeOpening: '"{{',
-  codeClosing: '}}"',
+  srcFolder: 'src',
+  distFolder: 'dist',
+  codeOpening: '/**',
+  codeClosing: '**/',
   variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
@@ -48,9 +54,9 @@ module.exports.rules = [
   {
     id: 'if cnd',
     template: 'if {cnd}#{{code}#}',
-    output: ({ cnd, code }) => `if (${cnd}) {
-      ${code}
-    }`
+    output: ({ cnd, code }) => \`if (\${cnd}) {
+      \${code}
+    }\`
     },
   {
     id: 'negative index',
@@ -58,37 +64,66 @@ module.exports.rules = [
     output: ({ array, i }) => {
       i = i.trim()
       if (i.includes(':')) return false
-      // if (i[0] === '-') return `${array}[${array}.length${i}]`
-      // return `${array}[${i}]`
-      return `${array}[${i}>0 ? ${i} : ${array}.length - ${i}]`
+      if (i[0] === '-') return \`\${array}[\${array}.length\${i}]\`
+      return \`\${array}[\${i}]\`
     }
   },
   {
     id: 'py slice',
     template: '{array} #[{start}:{end}#]',
     output: ({ array, start, end }) => {
-      if(!start) start = 0
-      if(!end.trim()) end = ''
-      else end = ','+end
-      return `${array}.slice(${start} ${end})`
+      return \`\${array}.slice(\${start}, \${end})\`
     }
   },
   {
     id: 'arrayComprehension',
     template: '#[ {el} for {elName} in {array} #]',
     output: function ({ array, el, elName }) {
-      return `${array}.map( ${elName}=> ${el})`
+      return \`\${array}.map( \${elName}=> \${el})\`
     }
   },
   {
     id: 'for',
     template: 'for {i}:{max}#{{code}#}',
-    output: ({i,max,code}) => `for(let ${i}=0; ${i}<${max}; ${i}++){
-      ${code}
-    }`
+    output: ({i,max,code}) => \`for(let \${i}=0; \${i}<\${max}; \${i}++){
+      \${code}
+    }\`
   },
   {
-    template: `<{elementName} {attributesArray}["{attr}"="{value}"] />`,
+    template: \`<{elementName} {attributesArray}[/* none of the rules matched attr*/=/* none of the rules matched value*/] />\`,
     output: b => 'eldata='+JSON.stringify(b)
   }
+]
+`
+    }, {
+        file: path.join('./src', 'HelloWorld.xt.js'),
+        text:
+`
+let employees = [
+  {name: 'emp0', salary: 1000},
+  {name: 'emp1', salary: 1320},
+  {name: 'emp2', salary: 1500},
+  {name: 'emp3', salary: 1100},
+  {name: 'emp4', salary: 2000},
+]
+
+let salaries = /** 
+
+[employee.salary for employee in employees]
+
+**/
+
+console.log(salaries)
+
+
+/** if true { 
+  console.log('I don\\'t need parentheses')
+}**/
+
+/** for i:20 { 
+  console.log(\`i is: \${i#}\`)
+}**/
+
+`
+    }
 ]

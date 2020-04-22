@@ -142,44 +142,4 @@ let defaultPairs = [
   { array: ['"', '"'], ignore: 1 },
   { array: ["'", "'"], ignore: 1 },
   { array: ["`", "`"], ignore: 1 },
-  { array: ["}", "`"], ignore: 1 },
-  { array: ["`", "`"], ignore: 1 },
-  { array: ["[", "]"] },
-  { array: ["{", "}"] },
-  { array: ["(", ")"] },
-  { array: ["//", "\n"], ignore: 1 },
-  { array: ["/*", "*/"], ignore: 1 },
-];
-
-let checkPair = (pairObj, word) => pairObj.array[1] === word;
-let unbalanced = (str, pairs) => {
-  pairs = pairs || defaultPairs;
-  if (!(pairs && pairs.length) || !str) return 0;
-  symbolStack = [];
-  let tildeTemp = { array: ["${", "}"] };
-  for (let i = 0; i < str.length; i++) {
-    for (let j = 0; j < pairs.length; j++) {
-      let pairObj = pairs[j];
-      let pair = pairObj.array;
-      let l = pair[0].length;
-
-      let ahead = str.slice(i, i + l);
-      if (i + l > str.length) {
-        continue;
-      }
-      let lastSymbol = symbolStack[symbolStack.length - 1] || { array: [] };
-
-      if (checkPair(lastSymbol, ahead)) symbolStack.pop();
-      else if (lastSymbol.ignore && str.slice(i - 1, i + 1) === "${")
-        symbolStack.push(tildeTemp);
-      else if (pair[0] === ahead && !lastSymbol.ignore) {
-        symbolStack.push(pairObj);
-      } else continue;
-      break;
-    }
-  }
-  return symbolStack.length;
-};
-exports.parseTemplate = (str) => parseTemplate(str, true);
-exports.parseCode = (str) => parseTemplate(str, false);
-exports.unbalanced = unbalanced
+  { array: ["

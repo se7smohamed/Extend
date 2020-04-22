@@ -56,7 +56,7 @@ The `output` is a normal javascript function that recieves an object containing 
 
 The return of this function is what the compiler is going write to your code. if for any reason you think that something went wrong and you don't want to process this code, eg: variable is undefined, or it's conflicting with a different rule, you need to return `false`.
 
-One last thing you need to know is the escape character which is the `#` sign, which you have already seen.
+One last thing you need to know is the escape character is the `#` sign, which you have already seen.
 
 
 

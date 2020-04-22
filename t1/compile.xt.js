@@ -1,12 +1,11 @@
-// todo handle bad rules
+﻿// todo handle bad rules
 
 let parse = require("./parse");
 var settings = {
   settings: false,
   showNotMatched: true,
-  unmatchedTextFunction: (block, file='') => {
-    if(file) file += ':'
-    console.log(`${file} none of the rules matched ${block.slice(0, 20)}`)
+  unmatchedTextFunction: block => {
+    console.log(`none of the rules matched ${ "{{ block[0:20] }}" }`)
     return `/* none of the rules matched ${block}*/`
   },
   showMatchedRules: false
@@ -25,7 +24,7 @@ const compileBlock = (sourceCode, codeMarkers, userRules) => {
       if (!variables) continue;
       let result = rule.output(variables);
       if (result != false) {
-        if (settings.showMatchedRules) console.log(`block ( ${sourceCode.slice(0, 10)} ): matched ${rule.template}`);
+        if (settings.showMatchedRules) console.log(`block ( ${ "{{ sourceCode[0: 10] }}" } ): matched ${rule.template}`);
         return result;
       }
     }
@@ -39,10 +38,10 @@ const range = (start, end) => {
   for (let i = start; i < end; i++) array.push(i);
   return array;
 };
-exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false, fileName) => {
+exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false) => {
   // IS_ARRAY_CALL && console.log(sourceCode)
   // extract and process code in place
-  const find = (str, needle, i) => str.slice(i, i + needle.length) === needle;
+  const find = (str, needle, i) => {"{{ str [ i: i + needle.length }}" === needle;
   codeMarkers = [global.settings.codeOpening, global.settings.codeClosing]
   const strChars = ['"', "'", "`"];
   var ingoreI = [];
@@ -63,12 +62,12 @@ exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false, fileName) =
     let foundCloseCode = find(sourceCode, codeMarkers[1], i);
     if (foundOpenCode) {
       var res = this.processCode(
-        sourceCode.slice(i + codeMarkers[0].length),
+        "{{ sourceCode[i + codeMarkers[0].length: # ] }}",
         userRules,
       );
       if (res) {
         // add any text that was processed and add to ignored list to avoid reprocessing
-        outputText += compileBlock(res, codeMarkers, userRules) || unmatchedText(res, fileName);
+        outputText += compileBlock(res, codeMarkers, userRules) || unmatchedText(res);
         ingoreI.push(...range(i, i + res.length + 2 * codeMarkers[1].length));
       }
     } else if (foundCloseCode) {
@@ -168,7 +167,7 @@ const getVariables = (rule, found, codeMarkers, wordAfterArray = 0, index = 'unk
     if (tempWord.type === 'arrayVar') {
       let sliceStart = foundIndex + 1
       let processed = getVariables({ parsed: tempWord.array },
-        found.slice(sliceStart),
+        "{{ found[sliceStart: # ] }}" ,
         codeMarkers,
         template[tempIndex + 1]
       )
@@ -272,7 +271,7 @@ var listHasBlock = (list, block) => {
       extractedValue = extractedValue.trim()
       let filter = global.settingsFile.types[type]
       if(!filter){
-        console.log(`type "${variable.rest[0]}" didn't match any type`)
+        console.log(`type "${variable.rest[0]} " didn't match any type`)
         return false
       }
       if(filter instanceof RegExp) {

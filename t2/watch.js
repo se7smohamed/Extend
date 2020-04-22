@@ -125,8 +125,8 @@ var localCompile = async fileName => {
   var shoudCompile = name => {
     var nameList = name.split(".");
     if (path.basename(name) === rulesFileName) { return 'rules'; }
-    if (nameList.slice(-1).join() === extentions[0].join()) return "xt";
-    if (nameList.slice(-2).join() === extentions[1].join()) return "xt.js";
+    if ( nameList.slice(-1 ) .join() === extentions[0].join()) return "xt";
+    if ( nameList.slice(-2 ) .join() === extentions[1].join()) return "xt.js";
     return false;
   };
 
@@ -150,7 +150,8 @@ var localCompile = async fileName => {
     return 1;
   }
 
-  var value = compileModule.processCode(sourceCode, userRules);
+  console.log(fileName, 'f')
+  var value = compileModule.processCode(sourceCode, userRules, false, fileName);
   let maxAttempets = 5
   for(let i=0; i<maxAttempets && !value; i++) {
     value = compileModule.processCode(sourceCode, userRules, settings);
