@@ -41,7 +41,7 @@ const range = (start, end) => {
 exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false) => {
   // IS_ARRAY_CALL && console.log(sourceCode)
   // extract and process code in place
-  const find = (str, needle, i) => {"{{ str [ i: i + needle.length }}" === needle;
+  const find = (str, needle, i) => "{{ str [ i: i + needle.length }}" === needle;
   codeMarkers = [global.settings.codeOpening, global.settings.codeClosing]
   const strChars = ['"', "'", "`"];
   var ingoreI = [];

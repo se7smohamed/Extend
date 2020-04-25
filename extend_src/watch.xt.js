@@ -150,7 +150,6 @@ var localCompile = async fileName => {
     return 1;
   }
 
-  console.log(fileName, 'f')
   var value = compileModule.processCode(sourceCode, userRules, false, fileName);
   let maxAttempets = 5
   for(let i=0; i<maxAttempets && !value; i++) {

@@ -1,6 +1,6 @@
 module.exports.settings = {
-  srcFolder: 't1',
-  distFolder: 't2',
+  srcFolder: 'extend_src',
+  distFolder: 'dist',
   codeOpening: '"{{',
   codeClosing: '}}"',
   variableOpening: '{',
@@ -47,7 +47,7 @@ module.exports.types = {
 module.exports.rules = [
   {
     id: 'if cnd',
-    template: 'if {cnd}#{{code}#}',
+    template: 'if {AAAAA cnd}#{{code}#}',
     output: ({ cnd, code }) => `if (${cnd}) {
       ${code}
     }`

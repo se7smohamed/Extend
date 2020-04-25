@@ -123,7 +123,7 @@ const parseTemplate = (temp, findVars = true) => {
       word.value = word.value.trim();
       let wordArray = word.value.split(/\s/);
       if (wordArray.length > 1) {
-        word.rest = wordArray.slice(0, -1);
+        word.rest = "{{ wordArray[ 0: -1] }}";
         word.value = wordArray[wordArray.length - 1];
       }
     }
@@ -163,14 +163,14 @@ let unbalanced = (str, pairs) => {
       let pair = pairObj.array;
       let l = pair[0].length;
 
-      let ahead = str.slice(i, i + l);
+      let ahead = "{{str[i: i + l]}}";
       if (i + l > str.length) {
         continue;
       }
       let lastSymbol = symbolStack[symbolStack.length - 1] || { array: [] };
 
       if (checkPair(lastSymbol, ahead)) symbolStack.pop();
-      else if (lastSymbol.ignore && str.slice(i - 1, i + 1) === "${")
+      else if (lastSymbol.ignore && "{{ str[i - 1: i + 1] }}" === "${")
         symbolStack.push(tildeTemp);
       else if (pair[0] === ahead && !lastSymbol.ignore) {
         symbolStack.push(pairObj);
