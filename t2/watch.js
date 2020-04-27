@@ -125,8 +125,8 @@ var localCompile = async fileName => {
   var shoudCompile = name => {
     var nameList = name.split(".");
     if (path.basename(name) === rulesFileName) { return 'rules'; }
-    if ( nameList.slice(-1 ) .join() === extentions[0].join()) return "xt";
-    if ( nameList.slice(-2 ) .join() === extentions[1].join()) return "xt.js";
+    if ( "{{ nameList[-1:# ] }}" .join() === extentions[0].join()) return "xt";
+    if ( "{{ nameList[-2:# ] }}" .join() === extentions[1].join()) return "xt.js";
     return false;
   };
 

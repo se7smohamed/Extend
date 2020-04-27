@@ -5,7 +5,7 @@ var settings = {
   settings: false,
   showNotMatched: true,
   unmatchedTextFunction: block => {
-    console.log(`none of the rules matched ${ "{{ block[0:20] }}" }`)
+    console.log(`none of the rules matched ${ `{{ block[0:20] }}`}`)
     return `/* none of the rules matched ${block}*/`
   },
   showMatchedRules: false
@@ -24,7 +24,7 @@ const compileBlock = (sourceCode, codeMarkers, userRules) => {
       if (!variables) continue;
       let result = rule.output(variables);
       if (result != false) {
-        if (settings.showMatchedRules) console.log(`block ( ${ "{{ sourceCode[0: 10] }}" } ): matched ${rule.template}`);
+        if (settings.showMatchedRules) console.log(`block ( ${ `{{ sourceCode[0: 10] }}` } ): matched ${rule.template}`);
         return result;
       }
     }
@@ -41,7 +41,7 @@ const range = (start, end) => {
 exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false) => {
   // IS_ARRAY_CALL && console.log(sourceCode)
   // extract and process code in place
-  const find = (str, needle, i) => {"{{ str [ i: i + needle.length }}" === needle;
+  const find = (str, needle, i) => `{{ str [ i : i + needle.length ] }}` === needle;
   codeMarkers = [global.settings.codeOpening, global.settings.codeClosing]
   const strChars = ['"', "'", "`"];
   var ingoreI = [];
@@ -62,7 +62,7 @@ exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false) => {
     let foundCloseCode = find(sourceCode, codeMarkers[1], i);
     if (foundOpenCode) {
       var res = this.processCode(
-        "{{ sourceCode[i + codeMarkers[0].length: # ] }}",
+        `{{ sourceCode[i + codeMarkers[0].length: # ] }}`,
         userRules,
       );
       if (res) {
@@ -167,7 +167,7 @@ const getVariables = (rule, found, codeMarkers, wordAfterArray = 0, index = 'unk
     if (tempWord.type === 'arrayVar') {
       let sliceStart = foundIndex + 1
       let processed = getVariables({ parsed: tempWord.array },
-        "{{ found[sliceStart: # ] }}" ,
+        `{{ found[sliceStart: # ] }}` ,
         codeMarkers,
         template[tempIndex + 1]
       )

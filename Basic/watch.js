@@ -7,6 +7,7 @@ var fse = require("fs-extra");
 var path = require("path");
 var chokidar = require("chokidar");
 var example = require("./example");
+var highlight = require('./highlight')
 
 let badDirectories = ['git', 'node_modules']
 var watcher = chokidar.watch("file or dir", {
@@ -73,8 +74,8 @@ getSettingsFile = fileName => {
   try {
     Object.keys(require.cache).forEach(function (key) { delete require.cache[key] })
     userRules = require(path.join(fileName));
-    global.settingsFile = userRules
-    global.settings = userRules.settings || {}
+    global.settingsFile = {...global.settingsFile, ...userRules}
+    global.settings = {...global.settings, ...userRules.settings || {}}
     return userRules;
   } catch (MODULE_NOT_FOUND) {
     console.log("rules file not found please create file.", fileName);
@@ -82,16 +83,18 @@ getSettingsFile = fileName => {
   }
 }
 var getUserRules = (fileName) => {
-  var userRules = getSettingsFile(fileName)
+  var settingsFile = getSettingsFile(fileName)
   // todo reload module: again.. no idea, sometimes it would fail when opening file, need to change how i reload modules.
   let maxAttempets = 15
   for (let i = 0; i < maxAttempets; i++) {
-    if(!Object.keys(userRules).length) {userRules = getSettingsFile(fileName)}
+    if(!Object.keys(settingsFile).length) {settingsFile = getSettingsFile(fileName)}
     else break
   }
-  var rules = userRules.rules;
-  rules = compileModule.handleRules(userRules);
-  return rules;
+  var userRules = settingsFile.rules;
+  userRules = compileModule.handleRules(settingsFile);
+  // console.log(settingsFile)
+  highlight.start(userRules, [settingsFile.settings.codeOpening, settingsFile.settings.codeClosing])
+  return userRules;
 };
 
 var writeToFile = (processed, fileName) => {
@@ -100,9 +103,12 @@ var writeToFile = (processed, fileName) => {
   global.msg('Success.')
 };
 
-var getPathAfterSrc = fileName => {
+var getFileName = fileName => {
   var rmvPath = path.join(process.cwd(), folders[0]);
-  var relativePath = fileName.replace(rmvPath, "");
+  return fileName.replace(rmvPath, "");
+}
+var getPathAfterSrc = fileName => {
+  var relativePath = getFileName(fileName)
   var outPath = path.join(folders[1], relativePath);
   return outPath;
 };
@@ -150,7 +156,7 @@ var localCompile = async fileName => {
     return 1;
   }
 
-  var value = compileModule.processCode(sourceCode, userRules);
+  var value = compileModule.processCode(sourceCode, userRules, 0, getFileName(fileName).slice(1));
   let maxAttempets = 5
   for(let i=0; i<maxAttempets && !value; i++) {
     value = compileModule.processCode(sourceCode, userRules, settings);

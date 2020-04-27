@@ -1,8 +1,8 @@
 module.exports.settings = {
   srcFolder: 't1',
   distFolder: 't2',
-  codeOpening: '"{{',
-  codeClosing: '}}"',
+  codeOpening: '`{{',
+  codeClosing: '}}`',
   variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
@@ -44,7 +44,7 @@ module.exports.types = {
   startsWithAorB: or(startsWithA, startsWithB)
 }
 
-module.exports.rules = [
+let rules = [
   {
     id: 'if cnd',
     template: 'if {cnd}#{{code}#}',
@@ -52,6 +52,18 @@ module.exports.rules = [
       ${code}
     }`
     },
+
+    
+  {
+    id: 'py slice',
+    template: '{array} #[{start}:{end}#]',
+    output: ({ array, start, end }) => {
+      if(!start) start = 0
+      if(!end.trim()) end = ''
+      else end = ','+end
+      return `${array}.slice(${start} ${end})`
+    }
+  },
   {
     id: 'negative index',
     template: '{array} #[{i}#]',
@@ -61,16 +73,6 @@ module.exports.rules = [
       // if (i[0] === '-') return `${array}[${array}.length${i}]`
       // return `${array}[${i}]`
       return `${array}[${i}>0 ? ${i} : ${array}.length - ${i}]`
-    }
-  },
-  {
-    id: 'py slice',
-    template: '{array} #[{start}:{end}#]',
-    output: ({ array, start, end }) => {
-      if(!start) start = 0
-      if(!end.trim()) end = ''
-      else end = ','+end
-      return `${array}.slice(${start} ${end})`
     }
   },
   {
@@ -86,9 +88,7 @@ module.exports.rules = [
     output: ({i,max,code}) => `for(let ${i}=0; ${i}<${max}; ${i}++){
       ${code}
     }`
-  },
-  {
-    template: `<{elementName} {attributesArray}["{attr}"="{value}"] />`,
-    output: b => 'eldata='+JSON.stringify(b)
   }
 ]
+
+module.exports.rules = rules

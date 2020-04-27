@@ -90,7 +90,7 @@ module.exports.rules = [
     }\`
   },
   {
-    template: \`<{elementName} {attributesArray}[/* none of the rules matched attr*/=/* none of the rules matched value*/] />\`,
+    template: \`<{elementName} {attributesArray}["{attr}"="{value}"] />\`,
     output: b => 'eldata='+JSON.stringify(b)
   }
 ]

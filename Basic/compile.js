@@ -5,7 +5,7 @@ var settings = {
   settings: false,
   showNotMatched: true,
   unmatchedTextFunction: (block, file='') => {
-    if(file) file += ':'
+    if(file) file += '|'
     console.log(`${file} none of the rules matched ${block.slice(0, 20)}`)
     return `/* none of the rules matched ${block}*/`
   },

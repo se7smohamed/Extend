@@ -1,0 +1,14 @@
+{
+    "highlight.decorations": { "rangeBehavior": 3 }, 
+    "highlight.regexFlags": "gi", 
+    "highlight.maxMatches": 250, 
+    "highlight.regexes": {
+        "(\"\\{\\{)((?!\\}\\}\").+)(\\}\\}\")": [ 
+          { "color": "#f00" }, 
+          { "color": "#0F0" }, 
+          { "color": "#00f" } 
+        
+        ]
+      }
+      
+  }
