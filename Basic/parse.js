@@ -11,16 +11,22 @@ const parseTemplate = (temp, findVars = true) => {
   let inArr = false;
 
   for (let i = 0; i < temp.length; i++) {
+    // console.log(i)
     const letter = temp[i];
     let last = array.length ? array[array.length - 1] : array[0];
+
     if (skipI.includes(i)) {
       last.value = (last.value || "") + letter;
       last.str = (last.str || "") + letter;
+      if(symbolsArray.includes(letter)){
+        last.type = 'symbol'
+      }
       continue;
     } else if (letter === escapeChar) {
       skipI.push(i + 1);
       continue;
     }
+
     // find vars is for parsing templates..
     if (findVars) {
       if (arrTerminals[0] === letter) {
@@ -62,6 +68,7 @@ const parseTemplate = (temp, findVars = true) => {
         continue;
       }
     }
+    
     if (symbolsArray.includes(letter)) {
       array.push({
         value: letter,
@@ -71,6 +78,7 @@ const parseTemplate = (temp, findVars = true) => {
       array.push({});
       continue;
     } else {
+
       if (symbolsArray.includes(letter)) {
         array.push({
           value: letter,
@@ -78,6 +86,7 @@ const parseTemplate = (temp, findVars = true) => {
           str: letter,
         });
         array.push({});
+        continue;
       } else if (letter.match(/\s/)) {
         let tmp = array.length - 1;
         while (tmp >= 0) {
@@ -108,7 +117,6 @@ const parseTemplate = (temp, findVars = true) => {
 
   array = array.filter((w) => Object.keys(w).length && w && w.value !== "");
 
-  // console.log(array.map(word => word.type))
   array.map((word, i) => {
     if (word.type === "arrayVar") {
       let obj = {
@@ -128,6 +136,7 @@ const parseTemplate = (temp, findVars = true) => {
       }
     }
   });
+
   // console.log(array)
   // array.forEach((word) => {
   //     if(word.value){

@@ -1,13 +1,14 @@
-module.exports.settings = {
-  srcFolder: 'extend_src',
-  distFolder: 'dist',
-  codeOpening: '"{{',
-  codeClosing: '}}"',
+let settings = {
+  srcFolder: 't1',
+  distFolder: 't2',
+  codeOpening: '`{{',
+  codeClosing: '}}`',
   variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
   arrayClosing: ']',
   escapeCharacter: '#',
+  vscodeHighlighting: true
 }
 
 const process = (filter, variable) => {
@@ -28,10 +29,10 @@ const or = (...filters) =>
 const startsWithA = variable => variable[0].toLowerCase() === 'a'
 const startsWithB = variable => variable[0].toLowerCase() === 'b'
 const experimental = (variable, vars, name) => {
-  vars.xxx = 'xxx'
+  vars.someOtherVariable = 'someOtherValue'
   return variable.slice(0, -3)
 }
-module.exports.types = {
+let types = {
   int: /^\d+$/,
   float: /^\d+\.\d+$/,
   // matches any thing (useless)
@@ -44,7 +45,7 @@ module.exports.types = {
   startsWithAorB: or(startsWithA, startsWithB)
 }
 
-module.exports.rules = [
+let rules = [
   {
     id: 'if cnd',
     template: 'if {AAAAA cnd}#{{code}#}',
@@ -52,17 +53,8 @@ module.exports.rules = [
       ${code}
     }`
     },
-  {
-    id: 'negative index',
-    template: '{array} #[{i}#]',
-    output: ({ array, i }) => {
-      i = i.trim()
-      if (i.includes(':')) return false
-      // if (i[0] === '-') return `${array}[${array}.length${i}]`
-      // return `${array}[${i}]`
-      return `${array}[${i}>0 ? ${i} : ${array}.length - ${i}]`
-    }
-  },
+
+    
   {
     id: 'py slice',
     template: '{array} #[{start}:{end}#]',
@@ -71,6 +63,15 @@ module.exports.rules = [
       if(!end.trim()) end = ''
       else end = ','+end
       return `${array}.slice(${start} ${end})`
+    }
+  },
+  {
+    id: 'negative index',
+    template: '{array} #[{i}#]',
+    output: ({ array, i }) => {
+      i = i.trim()
+      if (i.includes(':')) return false
+      return `${array}[${i}>0 ? ${i} : ${array}.length - ${i}]`
     }
   },
   {
@@ -86,9 +87,7 @@ module.exports.rules = [
     output: ({i,max,code}) => `for(let ${i}=0; ${i}<${max}; ${i}++){
       ${code}
     }`
-  },
-  {
-    template: `<{elementName} {attributesArray}["{attr}"="{value}"] />`,
-    output: b => 'eldata='+JSON.stringify(b)
   }
 ]
+
+module.exports = {rules, settings, types}

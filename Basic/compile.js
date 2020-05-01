@@ -5,8 +5,8 @@ var settings = {
   settings: false,
   showNotMatched: true,
   unmatchedTextFunction: (block, file='') => {
-    if(file) file += ':'
-    console.log(`${file} none of the rules matched ${block.slice(0, 20)}`)
+    if(file) file += '|'
+    console.log(`${file} none of the rules matched:${block.slice(0, 8)}`)
     return `/* none of the rules matched ${block}*/`
   },
   showMatchedRules: false
@@ -50,32 +50,31 @@ exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false, fileName) =
   var inStr = { is: false, char: "" };
   var accumulator = "";
   let outputText = "";
-  let handleStrings = false
 
   for (let i = 0; i < sourceCode.length; i++) {
     let letter = sourceCode[i];
     if (ingoreI.includes(i)) continue;
 
-
-    if( handleStrings ){ if (strChars.includes(letter)) { /* found string character like ' " ` */ /* add text as is */ if( ! (sourceCode[i-1] && sourceCode[i-1]==='\\') ){ /* if not escaped /* todo fix this for only closing */ if (!inStr.is) inStr.char = letter; else if (inStr.is && inStr.char === letter) inStr.char = ""; inStr.is = !inStr.is; outputText += letter; continue; } } /* add to text to block */ if (inStr.is) { outputText += letter; continue; } }
-
     let foundOpenCode = find(sourceCode, codeMarkers[0], i);
     let foundCloseCode = find(sourceCode, codeMarkers[1], i);
+    // nested calls
     if (foundOpenCode) {
       var res = this.processCode(
         sourceCode.slice(i + codeMarkers[0].length),
         userRules,
-      );
+      ).text;
       if (res) {
-        // add any text that was processed and add to ignored list to avoid reprocessing
         outputText += compileBlock(res, codeMarkers, userRules) || unmatchedText(res, fileName);
         ingoreI.push(...range(i, i + res.length + 2 * codeMarkers[1].length));
       }
-    } else if (foundCloseCode) {
+    }
+    // code finished.. return
+    else if (foundCloseCode) {
       ingoreI.push(...range(i, i + codeMarkers[1].length));
       if (accumulator) { outputText += compileBlock(accumulator, codeMarkers, userRules); }
-      return outputText;
+      return {text: outputText};
     }
+    
     else if (isOpen) accumulator += letter.value;
     else if (!isOpen) { outputText += letter.value || letter; }
   }
@@ -83,7 +82,7 @@ exports.processCode = (sourceCode, userRules, IS_ARRAY_CALL = false, fileName) =
   if (accumulator)
     outputText += compileBlock(accumulator, codeMarkers, userRules);
 
-  return outputText;
+  return {text: outputText};
 };
 
 
@@ -119,12 +118,6 @@ var isRightKeyword = (found, rule, i) => {
   return found && word && found.value === word.value;
 };
 
-/**
- * 
- * @param {*} rule has template which is array of words of some rule.
- * @param {*} found array of actuall source code (after some processing).
- * @param {*} wordAfterArray wordAfterArray is for array variable calls, it has the word right after the array.. duh?
- */
 const getVariables = (rule, found, codeMarkers, wordAfterArray = 0, index = 'unknown') => {
   // rmv codemarkers
   // vars is the object returned containing all variables extracted

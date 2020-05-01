@@ -9,11 +9,8 @@
   },
   "scripts": {
     "start": "node basic/watch.js",
-    "dev": "nodemon basic/watch.js",
     "w": "node basic/watch.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "e": "cd basic && pkg watch.js --targets win && move w.exe ../w.exe && cd .. && w.exe",
-    "z": "npm link && extend"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
@@ -27,6 +24,7 @@
   "dependencies": {
     "chokidar": "^3.3.0",
     "command-line-args": "^5.1.1",
+    "decomment": "^0.9.2",
     "fs-extra": "^8.1.0"
   }
 }
