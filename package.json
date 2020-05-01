@@ -9,11 +9,8 @@
   },
   "scripts": {
     "start": "node basic/watch.js",
-    "dev": "nodemon basic/watch.js",
     "w": "node basic/watch.js",
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "e": "cd basic && pkg watch.js --targets win && move w.exe ../w.exe && cd .. && w.exe",
-    "z": "npm link && extend"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",

@@ -1,113 +1,124 @@
-const fs = require('fs');
-const decomment = require('decomment');
-const compile = require('./compile');
+const fs = require("fs");
+const decomment = require("decomment");
 
+let colors = {
+  word: { color: "#C586C0" },
+  var: { color: "#9CDCFE" },
+  arrayVar: { color: "#bbb" },
+  terminals: { color: "#ccc4" },
+  symbol: { color: "#ddd" },
+  default: { color: "#ddd" },
+};
+var lastSettings = "";
 
 
 var readSettings = () => {
-    var settings
-    try{
-        try{ 
-            var file = fs.readFileSync('./.vscode/settings.json', 'utf8')
-            var text = decomment(file).trim()||"{}"
-        }
-        catch(ENOENT){ text = "{}" }
-        settings = JSON.parse(text);
-    }catch(e){
-        console.log('invalid settings.json.')
-        return false
+  var settings;
+  try {
+    try {
+      var file = fs.readFileSync("./.vscode/settings.json", "utf8");
+      var text = decomment(file).trim() || "{}";
+    } catch (ENOENT) {
+      text = "{}";
     }
-    return settings
+    settings = JSON.parse(text);
+  } catch (e) {
+    console.log("invalid settings.json.");
+    return false;
+  }
+  return settings;
+};
+
+var writeSettings = (settings) => {  
+  text = JSON.stringify(settings, "", 1);
+  if (text === lastSettings) return false
+  lastSettings = text;
+  try {
+    fs.mkdirSync("./.vscode");
+  } catch (EEXIST) {}
+  fs.writeFileSync("./.vscode/settings.json", text);
+};
+
+var escapeRegex = (string) => string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+let anyButWordBAD = (word) => `([\\s\\S]+?(?=${word}))`;
+let anyButWord = (word) => `((?:(?!${word})[\\s\\S])*)`;
+var createRegex = (words, terminals = ["`{{", "}}`"]) => {
+  let text = "";
+  terminals = [escapeRegex(terminals[0]), escapeRegex(terminals[1])];
+
+  let groups = [];
+  let r = "";
+  let group = (string) => r + "(" + string + ")" + r;
+
+  text += group(terminals[0]);
+  //569CD6',
+
+  groups.push(colors["terminals"]);
+
+  nextStaticString = (words) => {
+    words.push({ type: "word", value: group(escapeRegex(terminals[1])) });
+    return words.reduce((prev, curr) => {
+      if (curr.type !== "word") return prev;
+      return `${prev ? prev + "|" : ""}${curr.value}`;
+    }, "");
+  };
+
+  var nextWord = (words, i) => words.slice(i).find(w => w.type ==='word' || w.type==='symbol')  
+  
+  words.forEach((word, i) => {
+    if (word.type === "word" || word.type === "symbol") {
+      text += group("[\\s]*" + escapeRegex(word.value) + "[\\s]*");
+      groups.push( colors[word.type] || colors["default"] );
+    } else {
+      let next = nextWord(words, i)
+      if(!next || !next.value) return ''
+      let escaped = escapeRegex(next.value)
+      let ored = escaped ? escaped+'|'+terminals[1] : escaped
+
+      // console.log(anyButWord(ored), escaped)
+
+      text += `${(anyButWord(ored)||anyButWord(terminals[1]))}`;
+      groups.push( colors[word.type] || colors["default"] );
+    }
+  });
+
+  text += group(terminals[1]);
+  groups.push( colors["terminals"] );
+
+  return { [text]: groups };
+};
+
+let clearSettings = (settings) => {
+  for(let key in settings)
+    if (key.slice(0, 10)==='highlight.')
+      delete settings[key]
+
+  writeSettings(settings)
 }
 
-var writeSettings = settings => {
-    text = JSON.stringify(settings, '', 2)
-    try{ fs.mkdirSync('./.vscode') }
-    catch(EEXIST){}
-    fs.writeFileSync('./.vscode/settings.json', text)
-}
-
-
-var escapeRegex = string => string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-
-
-// wordType = word => word.type === 'word' ? 'static' : 'dynamic'
-
-var createRegex = (words, terminals=['`{{', '}}`']) => {
-    let text = ''
-    terminals = [escapeRegex(terminals[0]), escapeRegex(terminals[1])]
-
-    let groups = []
-    let r = ''
-    let group = string => r+'(' + string + ')'+r
-    let anyButWord = word => `(?!(${ word }).*)`
-
-    text += group(( terminals[0]))
-    //569CD6',
-    let colors = {
-        word: {color: '#C586C0' },
-        var: {color: '#9CDCFE'  },
-        arrayVar: {color: '#a22' },
-        terminals: {color: '#ccc8' },
-        symbol: {color: '#ddd' },
-        default: {color: '#c44' },
-    }
-
-    groups.push( {color: colors['terminals']} )
-    
-    nextStaticString = words => {
-        words.push({type: 'word', value: group(escapeRegex(terminals[1]))})
-        return words.reduce((prev, curr) => {
-            if(curr.type !== 'word') return prev
-            return `${prev?prev+'|':''}${curr.value}`
-        }, '')
-    }
-    
-
-    words.forEach( (word, i) => {
-        if ( word.type==='word' || word.type === 'symbol') {
-            // console.log(escapeRegex(word.value))
-            text += group('[\\s]*'+ escapeRegex(word.value) +'[\\s]*')
-            groups.push({color: colors[word.type] || colors['default']})
-        }else{
-            text += `([\\s\\S][^${ (terminals[1]) }]*)`
-            groups.push({color: colors[word.type] || colors['default']})
-        }
-        `{{ s z aasdasd}}`
-    })
-    
-    text += group((terminals[1]) )
-    groups.push( {color: colors['terminals']} )
-
-    return { [text]: groups}
-}
-
-
-var lastSettings = ''
 var start = (userRules, terminals) => {
-    var settings = readSettings()
-    if(!settings) return false
+  var settings = readSettings();
+  if (!settings) return false;
+  if (!global.settings.vscodeHighlighting) return clearSettings(settings)
+  let rules = userRules;
+  settings["highlight.regexes"] = {};
 
-    let rules = userRules
-    settings['highlight.regexes'] = {}
-    
-    rules.forEach(rule => {
-        let block = createRegex(rule.parsed, terminals)
-        settings['highlight.regexes'] = {...settings['highlight.regexes'], ...block }
-    })
-    
-    settings['highlight.regexes'][`(${terminals[0]})([\\s\\S][^${terminals[1]}]*)(${terminals[1]})`] = [
-        {color: '#ccc4'},
-        {color: '#ddd'},
-        {color: '#ccc4'},
-    ]
-
-    a = `{{asdads}}`
-    
-    settingsStr = JSON.stringify(settings)
-    if(settingsStr !== lastSettings) writeSettings(settings)
-    lastSettings = settingsStr 
-}
+  rules.forEach((rule) => {
+    let block = createRegex(rule.parsed, terminals);
+    settings["highlight.regexes"] = {
+      ...settings["highlight.regexes"],
+      ...block,
+    };
+  });
 
 
-exports.start = start
+  // default case
+  settings["highlight.regexes"][
+    `(${terminals[0]})${anyButWord(terminals[1])}(${terminals[1]})`
+  ] = [ colors.terminals, colors.default, colors.terminals ];
+
+  writeSettings(settings)
+};
+
+exports.start = start;

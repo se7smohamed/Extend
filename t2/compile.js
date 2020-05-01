@@ -1,14 +1,13 @@
 ﻿// todo handle bad rules
-
 let parse = require("./parse");
 var settings = {
   settings: false,
   showNotMatched: true,
   unmatchedTextFunction: block => {
-    console.log(`none of the rules matched ${ block.slice(0 ,20)}`)
+    console.log(`none of the rules matched ${ block.slice(0 ,20) }`)
     return `/* none of the rules matched ${block}*/`
   },
-  showMatchedRules: false
+  showMatchedRules: false,
 }
 var unmatchedText = () => ''
 if (settings.showNotMatched) unmatchedText = settings.unmatchedTextFunction

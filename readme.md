@@ -1,7 +1,6 @@
 # Extend
 
-Extend is the tool to bring your ideas into the javascript world, unlike existing js compilers extend is not meant to bring a specific set of features to javascript, it's here for you to create your own.
-
+Extend is the tool to bring your ideas into the programming world, using Extend you can introduce new syntax/features to the language of your choice within a few minutes.
 ## Installation
 To get started you need to install Extend using 
 ```
@@ -9,6 +8,13 @@ npm install -g extendx
 ```
 Please note we are going to use the name extend<u>x</u> for the cli for now.
 
+Syntax highlighting is under development and is partially supported on vscode, to start using it launch the command palette using `CTRL`+`P` and enter the command 
+
+```
+ext install fabiospampinato.vscode-highlight
+```
+
+this will install the extension [here](https://marketplace.visualstudio.com/items?itemName=fabiospampinato.vscode-highlight "Vscode highlight extension"), note this is going to write to .vscode/settings.json, so you might want to backup this file.
 
 ## Usage
 
@@ -25,7 +31,7 @@ this is where your *rules* live and is just a normal javascript with a few expor
 The compiler will then look for code inside your `src` folder, only files with extensions `.xt` or `.xt.js` will be processed.
 in this stage of development, the compiler will require a character or more to indicate blocks of code that will require compiling.
 
-in this example we used the mustache syntax, but you can choose any other syntax, one trick is to use multiline comment syntax in your programming language to avoid your code being highlighted as an error by your IDE.
+in this example we used the mustache syntax, but it's up to you to choose any syntax you like, you might want to use multiline string / comment syntax of your programming language to avoid your code being highlighted as an error by your IDE.
 
 eg:&nbsp; `var salaries = {{ [employee.salary for employee in employees] }}`
 
@@ -52,7 +58,7 @@ function ({ array, start, end }) {
 ```
 
 
-The `output` is a normal javascript function that recieves an object containing all variables that the compiler found, it can be a good idea to use destructuring here.
+The `output` is a normal javascript function that receives an object containing all variables that the compiler found, it can be a good idea to use destructuring here.
 
 The return of this function is what the compiler is going write to your code. if for any reason you think that something went wrong and you don't want to process this code, eg: variable is undefined, or it's conflicting with a different rule, you need to return `false`.
 
@@ -74,12 +80,12 @@ rule.template = '<{elementName} {attributesArray}["{attrName}"="{value}"] />'
 ```
 
 
-## `_exend.js` file
-`_exend.js` is a file that lives in your projects root directory and has 3 exports: `rules`, `settings` for the `compiler`, as well as `types`.
+## `_extend.js` file
+`_extend.js` is a file that lives in your projects root directory and has 3 exports: `rules`, `settings` for the `compiler`, as well as `types`.
 
 
 ### Settings
-The default settings are as follows, note that `codeOpening` and `codeClosing` are for your source code files and are used to highlight code that needs to be processed, you can use whatever you want, or you can use the comment syntax in your programming language as mentioned above.
+The default settings are as follows, note that `codeOpening` and `codeClosing` are for your source code files and are used to highlight code that needs to be processed, you can use whatever you want, or you can use the string / comment syntax of your programming language as mentioned above, note that you want to use two different strings for opening and closing.
 
 `variableOpening`, `variableClosing`, `arrayOpening`, and `arrayClosing` all apply to your templates, inside your `_extend.js` file.
 
@@ -87,13 +93,14 @@ The default settings are as follows, note that `codeOpening` and `codeClosing` a
 module.exports.settings = {
   srcFolder: 'src',
   distFolder: 'dist',
-  codeOpening: '/**',
-  codeClosing: '**/',
-  variableOpening: '}',
+  codeOpening: '`{{',
+  codeClosing: '}}`',
+  variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
   arrayClosing: ']',
   escapeCharacter: '#',
+  vscodeHighlighting: true
 }
 ```
 
@@ -123,6 +130,9 @@ to use the type you declare your variables as: `{startsWithAorB MyVariable}`, wh
 
 
 ## What's new
+
+### 0.3
+Syntax highlighting on VSCode is here! (kind of)
 
 ### 0.2
 Added variable types using regex or js functions.

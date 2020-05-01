@@ -1,4 +1,4 @@
-module.exports.settings = {
+let settings = {
   srcFolder: 't1',
   distFolder: 't2',
   codeOpening: '`{{',
@@ -8,6 +8,7 @@ module.exports.settings = {
   arrayOpening: '[',
   arrayClosing: ']',
   escapeCharacter: '#',
+  vscodeHighlighting: true
 }
 
 const process = (filter, variable) => {
@@ -28,10 +29,10 @@ const or = (...filters) =>
 const startsWithA = variable => variable[0].toLowerCase() === 'a'
 const startsWithB = variable => variable[0].toLowerCase() === 'b'
 const experimental = (variable, vars, name) => {
-  vars.xxx = 'xxx'
+  vars.someOtherVariable = 'someOtherValue'
   return variable.slice(0, -3)
 }
-module.exports.types = {
+let types = {
   int: /^\d+$/,
   float: /^\d+\.\d+$/,
   // matches any thing (useless)
@@ -70,8 +71,6 @@ let rules = [
     output: ({ array, i }) => {
       i = i.trim()
       if (i.includes(':')) return false
-      // if (i[0] === '-') return `${array}[${array}.length${i}]`
-      // return `${array}[${i}]`
       return `${array}[${i}>0 ? ${i} : ${array}.length - ${i}]`
     }
   },
@@ -91,4 +90,4 @@ let rules = [
   }
 ]
 
-module.exports.rules = rules
+module.exports = {rules, settings, types}

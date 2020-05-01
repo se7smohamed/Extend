@@ -1,19 +1,18 @@
-const path = require('path')
+const path = require("path");
 exports.text = [
-    {
-        file: '_extend.js',
-        text:
-`
-module.exports.settings = {
+  {
+    file: "_extend.js",
+    text: `let settings = {
   srcFolder: 'src',
   distFolder: 'dist',
-  codeOpening: '/**',
-  codeClosing: '**/',
+  codeOpening: '\`{{',
+  codeClosing: '}}\`',
   variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
   arrayClosing: ']',
   escapeCharacter: '#',
+  vscodeHighlighting: true
 }
 
 const process = (filter, variable) => {
@@ -34,12 +33,12 @@ const or = (...filters) =>
 const startsWithA = variable => variable[0].toLowerCase() === 'a'
 const startsWithB = variable => variable[0].toLowerCase() === 'b'
 const experimental = (variable, vars, name) => {
-  vars.xxx = 'xxx'
+  vars.someOtherVariable = 'someOtherValue'
   return variable.slice(0, -3)
 }
-module.exports.types = {
-  int: /^\d+$/,
-  float: /^\d+\.\d+$/,
+let types = {
+  int: /^d+$/,
+  float: /^d+.d+$/,
   // matches any thing (useless)
   any: v => true,
   // matches nothing (useless)
@@ -50,29 +49,24 @@ module.exports.types = {
   startsWithAorB: or(startsWithA, startsWithB)
 }
 
-module.exports.rules = [
+let rules = [
   {
-    id: 'if cnd',
-    template: 'if {cnd}#{{code}#}',
-    output: ({ cnd, code }) => \`if (\${cnd}) {
-      \${code}
-    }\`
-    },
+    id: 'py slice',
+    template: '{array} #[{start}:{end}#]',
+    output: ({ array, start, end }) => {
+      if(!start) start = 0
+      if(!end.trim()) end = ''
+      else end = ','+end
+      return \`\${array}.slice(\${start} \${end})\`
+    }
+  },
   {
     id: 'negative index',
     template: '{array} #[{i}#]',
     output: ({ array, i }) => {
       i = i.trim()
       if (i.includes(':')) return false
-      if (i[0] === '-') return \`\${array}[\${array}.length\${i}]\`
-      return \`\${array}[\${i}]\`
-    }
-  },
-  {
-    id: 'py slice',
-    template: '{array} #[{start}:{end}#]',
-    output: ({ array, start, end }) => {
-      return \`\${array}.slice(\${start}, \${end})\`
+      return \`\${array}[\${i}>0 ? \${i} : \${array}.length - \${i}]\`
     }
   },
   {
@@ -86,19 +80,16 @@ module.exports.rules = [
     id: 'for',
     template: 'for {i}:{max}#{{code}#}',
     output: ({i,max,code}) => \`for(let \${i}=0; \${i}<\${max}; \${i}++){
-      \${code}
-    }\`
-  },
-  {
-    template: \`<{elementName} {attributesArray}["{attr}"="{value}"] />\`,
-    output: b => 'eldata='+JSON.stringify(b)
+  \${code}}\`
   }
 ]
-`
-    }, {
-        file: path.join('./src', 'HelloWorld.xt.js'),
-        text:
-`
+
+module.exports = {rules, settings, types}
+`,
+  },
+  {
+    file: path.join("./src", "HelloWorld.xt.js"),
+    text: `
 let employees = [
   {name: 'emp0', salary: 1000},
   {name: 'emp1', salary: 1320},
@@ -107,23 +98,14 @@ let employees = [
   {name: 'emp4', salary: 2000},
 ]
 
-let salaries = /** 
-
-[employee.salary for employee in employees]
-
-**/
+let salaries = \`{{ [employee.salary for employee in employees] }}\`
 
 console.log(salaries)
 
 
-/** if true { 
-  console.log('I don\\'t need parentheses')
-}**/
-
-/** for i:20 { 
-  console.log(\`i is: \${i#}\`)
-}**/
-
-`
-    }
-]
+\`{{ for i:20 {
+  console.log(\`i is: \${i}\`)
+} }}\`
+`,
+  },
+];

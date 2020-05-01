@@ -35,15 +35,16 @@ var optionDefinitions = [
 ];
 
 var defaultSettings = {
-  srcFolder: 'src',
-  distFolder: 'dist',
-  codeOpening: '{{',
-  codeClosing: '}}',
-  variableOpening: '}',
+  srcFolder: 't1',
+  distFolder: 't2',
+  codeOpening: '`{{',
+  codeClosing: '}}`',
+  variableOpening: '{',
   variableClosing: '}',
   arrayOpening: '[',
   arrayClosing: ']',
   escapeCharacter: '#',
+  vscodeHighlighting: true
 }
 var settings = defaultSettings
 global.settings = settings
@@ -78,7 +79,7 @@ getSettingsFile = fileName => {
     global.settings = {...global.settings, ...userRules.settings || {}}
     return userRules;
   } catch (MODULE_NOT_FOUND) {
-    console.log("rules file not found please create file.", fileName);
+    console.log("rules file not found, make sure you have a valid _extend.js file at the current directory.");
     process.exit()
   }
 }
@@ -92,13 +93,13 @@ var getUserRules = (fileName) => {
   }
   var userRules = settingsFile.rules;
   userRules = compileModule.handleRules(settingsFile);
-  // console.log(settingsFile)
-  highlight.start(userRules, [settingsFile.settings.codeOpening, settingsFile.settings.codeClosing])
+  let markers = [settingsFile.settings.codeOpening, settingsFile.settings.codeClosing]
+  highlight.start(userRules, markers)
   return userRules;
 };
 
 var writeToFile = (processed, fileName) => {
-  if(!processed) return global.msg('Error, nothing to write.')
+  if(!processed) return global.msg(`${fileName}: got nothing to write.`)
   fse.outputFileSync(fileName, processed);
   global.msg('Success.')
 };
@@ -156,10 +157,10 @@ var localCompile = async fileName => {
     return 1;
   }
 
-  var value = compileModule.processCode(sourceCode, userRules, 0, getFileName(fileName).slice(1));
+  var value = compileModule.processCode(sourceCode, userRules, 0, getFileName(fileName).slice(1)).text;
   let maxAttempets = 5
   for(let i=0; i<maxAttempets && !value; i++) {
-    value = compileModule.processCode(sourceCode, userRules, settings);
+    value = compileModule.processCode(sourceCode, userRules, settings).text;
   }
 
   if (shouldCompile === "xt.js") writeName = writeName.replace(".xt", "");
@@ -169,7 +170,10 @@ var localCompile = async fileName => {
 
 function unlink(fileName) {
   fs.unlink(fileName, error => {
-    if(error) return console.log("unlink error", error);
+    if(error){
+      if(error.code==='ENOENT') return 1
+      return console.log("delete error", {...error});
+    }
     global.msg('Deleted.')
   });
 }
