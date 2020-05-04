@@ -1,6 +1,8 @@
 # Extend
 
-Extend is the tool to bring your ideas into the programming world, using Extend you can introduce new syntax/features to the language of your choice within a few minutes.
+Extend is the tool to bring your ideas into reality,
+
+You can use Extend to introduce new syntax/features to the language of your choice in the matter of minutes.
 ## Installation
 To get started you need to install Extend using 
 ```
@@ -14,7 +16,7 @@ Syntax highlighting is under development and is partially supported on vscode, t
 ext install fabiospampinato.vscode-highlight
 ```
 
-this will install the extension [here](https://marketplace.visualstudio.com/items?itemName=fabiospampinato.vscode-highlight "Vscode highlight extension"), note this is going to write to .vscode/settings.json, so you might want to backup this file.
+this will install the extension [here](https://marketplace.visualstudio.com/items?itemName=fabiospampinato.vscode-highlight "Vscode highlight extension"), note this is going to write to .vscode/settings.json of your wokrspace, so you might want to backup this file.
 
 ## Usage
 
@@ -25,7 +27,7 @@ extendx --start
 ```
 which is going to create a basic project for you to start with.
 
-The first thing that you are going to need is the `_extend.js` file in your root directory,
+The first thing that you are going to need is the `_extend.js` file inside your root directory,
 this is where your *rules* live and is just a normal javascript with a few exports, one of which is `rules`, more about that in a second.
 
 The compiler will then look for code inside your `src` folder, only files with extensions `.xt` or `.xt.js` will be processed.
