@@ -2,7 +2,8 @@ const path = require("path");
 exports.text = [
   {
     file: "_extend.js",
-    text: `let settings = {
+    text:
+`let settings = {
   srcFolder: 'src',
   distFolder: 'dist',
   codeOpening: '\`{{',
@@ -36,6 +37,7 @@ const experimental = (variable, vars, name) => {
   vars.someOtherVariable = 'someOtherValue'
   return variable.slice(0, -3)
 }
+
 let types = {
   int: /^d+$/,
   float: /^d+.d+$/,
@@ -51,7 +53,6 @@ let types = {
 
 let rules = [
   {
-    id: 'py slice',
     template: '{array} #[{start}:{end}#]',
     output: ({ array, start, end }) => {
       if(!start) start = 0
@@ -61,38 +62,36 @@ let rules = [
     }
   },
   {
-    id: 'negative index',
     template: '{array} #[{i}#]',
     output: ({ array, i }) => {
       i = i.trim()
       if (i.includes(':')) return false
-      return \`\${array}[\${i}>0 ? \${i} : \${array}.length - \${i}]\`
+      return \`\${array}[\${i}>0 ? \${i} : \${array}.length+\${i}]\`
     }
   },
   {
-    id: 'arrayComprehension',
     template: '#[ {el} for {elName} in {array} #]',
     output: function ({ array, el, elName }) {
       return \`\${array}.map( \${elName}=> \${el})\`
     }
   },
   {
-    id: 'for',
     template: 'for {i}:{max}#{{code}#}',
     output: ({i,max,code}) => \`for(let \${i}=0; \${i}<\${max}; \${i}++){
   \${code}}\`
   }
 ]
 
-module.exports = {rules, settings, types}
-`,
+module.exports = {rules, settings, types}`
   },
   {
     file: path.join("./src", "HelloWorld.xt.js"),
-    text: `
-let employees = [
+    text:
+`let employees = [
   {name: 'emp0', salary: 1000},
   {name: 'emp1', salary: 1320},
+  {name: 'emp1', salary: 1320},
+  {name: 'emp1', salary: 1620},
   {name: 'emp2', salary: 1500},
   {name: 'emp3', salary: 1100},
   {name: 'emp4', salary: 2000},
@@ -106,6 +105,11 @@ console.log(salaries)
 \`{{ for i:20 {
   console.log(\`i is: \${i}\`)
 } }}\`
-`,
-  },
+
+console.log(\`last salary is \${\`{{salaries[-1]}}\`}\`)
+console.log(\`Array slicing? \${\`{{salaries[1: -2]}}\`}\`)
+
+
+console.log(\`Unimpressed? feel free to create your own using the _extend.js file.\`)`
+  }
 ];
